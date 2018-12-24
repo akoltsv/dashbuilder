@@ -5,7 +5,7 @@
   <parent>
     <artifactId>dashbuilder-client</artifactId>
     <groupId>org.dashbuilder</groupId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -26,12 +26,12 @@
       <groupId>org.gwtbootstrap3</groupId>
       <artifactId>gwtbootstrap3</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.gwtbootstrap3</groupId>
       <artifactId>gwtbootstrap3-extras</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jboss.errai</groupId>
       <artifactId>errai-common</artifactId>
@@ -51,7 +51,7 @@
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-client-api</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-api</artifactId>
@@ -60,6 +60,11 @@
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-commons</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-commons</artifactId>
     </dependency>
 
     <dependency>
@@ -76,15 +81,20 @@
       <groupId>org.dashbuilder</groupId>
       <artifactId>dashbuilder-validations</artifactId>
     </dependency>
-    
+
     <dependency>
-      <groupId>org.dashbuilder</groupId>
-      <artifactId>dashbuilder-dataset-api</artifactId>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-dataset-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.dashbuilder</groupId>
       <artifactId>dashbuilder-displayer-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-services-api</artifactId>
     </dependency>
 
     <dependency>
@@ -106,7 +116,7 @@
       <groupId>org.dashbuilder</groupId>
       <artifactId>dashbuilder-renderer-default</artifactId>
     </dependency>
-    
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>com.google.gwt.gwtmockito</groupId>
@@ -117,6 +127,27 @@
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-testing-utils</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-dataset-api</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-dataset-client</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-displayer-client</artifactId>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 

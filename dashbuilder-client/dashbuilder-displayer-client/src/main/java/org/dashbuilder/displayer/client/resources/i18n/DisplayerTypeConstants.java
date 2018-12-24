@@ -20,9 +20,7 @@ import com.google.gwt.i18n.client.ConstantsWithLookup;
 
 public interface DisplayerTypeConstants extends ConstantsWithLookup {
 
-    public static final DisplayerTypeConstants INSTANCE = GWT.create(DisplayerTypeConstants.class);
-
-    public static final String DST_PREFIX = "DISPLAYER_SUBTYPE_";
+    DisplayerTypeConstants INSTANCE = GWT.create(DisplayerTypeConstants.class);
 
     String displayer_type_selector_tab_bar();
 
@@ -42,6 +40,7 @@ public interface DisplayerTypeConstants extends ConstantsWithLookup {
 
     String displayer_type_selector_tab_table();
 
+    String displayer_type_selector_tab_selector();
 
     // Subtype enum literals
 
@@ -75,6 +74,19 @@ public interface DisplayerTypeConstants extends ConstantsWithLookup {
 
     String DISPLAYER_SUBTYPE_MAP_MARKERS();
 
+    String DISPLAYER_SUBTYPE_METRIC_CARD();
+
+    String DISPLAYER_SUBTYPE_METRIC_CARD2();
+
+    String DISPLAYER_SUBTYPE_METRIC_QUOTA();
+
+    String DISPLAYER_SUBTYPE_METRIC_PLAIN_TEXT();
+
+    String DISPLAYER_SUBTYPE_SELECTOR_DROPDOWN();
+
+    String DISPLAYER_SUBTYPE_SELECTOR_LABELS();
+
+    String DISPLAYER_SUBTYPE_SELECTOR_SLIDER();
 
     // Subtype selector tooltips
 
@@ -108,8 +120,20 @@ public interface DisplayerTypeConstants extends ConstantsWithLookup {
 
     String METERCHART_default_tt();
 
-    String METRIC_default_tt();
+    String METRIC_METRIC_CARD_tt();
+
+    String METRIC_METRIC_CARD2_tt();
+
+    String METRIC_METRIC_QUOTA_tt();
+
+    String METRIC_METRIC_PLAIN_TEXT_tt();
 
     String TABLE_default_tt();
+
+    String SELECTOR_SELECTOR_DROPDOWN_tt();
+
+    String SELECTOR_SELECTOR_LABELS_tt();
+
+    String SELECTOR_SELECTOR_SLIDER_tt();
 
 }

@@ -36,6 +36,7 @@ import org.mockito.stubbing.Answer;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.client.mvp.PlaceManager;
 import org.uberfire.client.workbench.widgets.common.ErrorPopupPresenter;
+import org.uberfire.ext.editor.commons.client.file.popups.SavePopUpPresenter;
 import org.uberfire.mocks.CallerMock;
 import org.uberfire.mocks.EventSourceMock;
 import org.uberfire.mvp.PlaceRequest;
@@ -44,8 +45,7 @@ import org.uberfire.workbench.events.NotificationEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.jgroups.util.Util.assertEquals;
-import static org.jgroups.util.Util.assertNotNull;
+import static org.jgroups.util.Util.*;
 import static org.mockito.Mockito.*;
 
 
@@ -65,6 +65,7 @@ public class DataSetDefWizardScreenTest {
     @Mock DataSetBasicAttributesWorkflow dataSetBasicAttributesWorkflow;
     @Mock SQLDataSetEditWorkflow editWorkflow;
     @Mock DataSetDefVfsServices dataSetDefVfsServices;
+    @Mock SavePopUpPresenter savePopUpPresenter;
     Caller<DataSetDefVfsServices> services;
     private DataSetDefWizardScreen presenter;
 
@@ -80,15 +81,17 @@ public class DataSetDefWizardScreenTest {
         when(dataSetProviderTypeWorkflow.edit(any(DataSetDef.class))).thenReturn(dataSetProviderTypeWorkflow);
         when(dataSetProviderTypeWorkflow.providerTypeEdition()).thenReturn(dataSetProviderTypeWorkflow);
 
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
-                RemoteCallback callback = (RemoteCallback) invocationOnMock.getArguments()[1];
-                callback.callback(dataSetDef);
-                return null;
-            }
+        doAnswer(invocationOnMock -> {
+            RemoteCallback callback = (RemoteCallback) invocationOnMock.getArguments()[1];
+            callback.callback(dataSetDef);
+            return null;
         }).when(clientServices).newDataSet(any(DataSetProviderType.class), any(RemoteCallback.class));
         
+        doAnswer(invocationOnMock -> {
+            presenter.onClose();
+            return null;
+        }).when(placeManager).closePlace(any(PlaceRequest.class));
+
         when(dataSetBasicAttributesWorkflow.edit(any(DataSetDef.class))).thenReturn(dataSetBasicAttributesWorkflow);
         when(dataSetBasicAttributesWorkflow.basicAttributesEdition()).thenReturn(editWorkflow);
         when(editWorkflow.getDataSetDef()).thenReturn(dataSetDef);
@@ -100,12 +103,19 @@ public class DataSetDefWizardScreenTest {
         when(editWorkflow.showConfigurationTab()).thenReturn(editWorkflow);
         when(editWorkflow.showAdvancedTab()).thenReturn(editWorkflow);
         when(workflowFactory.basicAttributes(any(DataSetProviderType.class))).thenReturn(dataSetBasicAttributesWorkflow);
-        doNothing().when(placeManager).goTo(anyString());
-        doNothing().when(placeManager).closePlace(any(PlaceRequest.class));
-        doNothing().when(placeManager).closePlace(anyString());
-        presenter = new DataSetDefWizardScreen(beanManager, workflowFactory, services, clientServices,
-                notification, placeManager, errorPopupPresenter, view);
+        presenter = new DataSetDefWizardScreen( beanManager, workflowFactory, services, clientServices,
+                                                notification, placeManager, errorPopupPresenter, savePopUpPresenter, view );
         presenter.services = services;
+    }
+
+    @Test
+    public void testOnClose() {
+        presenter.init(PlaceRequest.NOWHERE);
+        DataSetEditorWorkflow currentWorkflow = presenter.currentWorkflow;
+
+        presenter.onClose();
+        verify(workflowFactory).dispose(currentWorkflow);
+        assertNull("current workflow null", presenter.currentWorkflow);
     }
 
     @Test
@@ -125,7 +135,7 @@ public class DataSetDefWizardScreenTest {
         verify(workflowFactory, times(1)).providerType();
         verify(view, times(1)).setWidget(any(IsWidget.class));
         verify(dataSetProviderTypeWorkflow, times(1)).edit(any(DataSetDef.class));
-        verify(dataSetProviderTypeWorkflow, times(1)).showNextButton();
+        verify(dataSetProviderTypeWorkflow, times(0)).showNextButton();
         verify(dataSetProviderTypeWorkflow, times(0)).showTestButton();
         verify(dataSetProviderTypeWorkflow, times(0)).showBackButton();
     }
@@ -211,6 +221,7 @@ public class DataSetDefWizardScreenTest {
         verify(workflowFactory, times(0)).providerType();
         verify(workflowFactory, times(0)).edit(any(DataSetProviderType.class));
         verify(workflowFactory, times(0)).basicAttributes(any(DataSetProviderType.class));
+        assertNull("current workflow null", presenter.currentWorkflow);
     }
 
     @Test

@@ -17,12 +17,12 @@ package org.dashbuilder.client.widgets.dataset.explorer;
 
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
+import org.dashbuilder.dataprovider.DataSetProviderType;
 import org.dashbuilder.dataset.client.DataSetClientServices;
 import org.dashbuilder.dataset.def.DataSetDef;
 import org.dashbuilder.dataset.events.DataSetDefModifiedEvent;
 import org.dashbuilder.dataset.events.DataSetDefRegisteredEvent;
 import org.dashbuilder.dataset.events.DataSetDefRemovedEvent;
-import org.jboss.errai.common.client.api.RemoteCallback;
 import org.uberfire.client.mvp.UberView;
 
 import javax.annotation.PostConstruct;
@@ -30,30 +30,37 @@ import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull;
+import static org.kie.soup.commons.validation.PortablePreconditions.checkNotNull;
+import static org.dashbuilder.dataprovider.DataSetProviderType.*;
 
 /**
  * <p>Data Set Explorer widget.</p>
- * 
- * @since 0.3.0 
+ *
+ * @since 0.3.0
  */
 @Dependent
 public class DataSetExplorer implements IsWidget {
 
     public interface View extends UberView<DataSetExplorer> {
-        
+
         View addPanel(final DataSetPanel.View panelView);
-        
+
         View clear();
     }
-    
+
+    List<DataSetProviderType> SUPPORTED_TYPES = Arrays.asList(BEAN,
+                                                              CSV,
+                                                              ELASTICSEARCH,
+                                                              SQL);
+
     Instance<DataSetPanel> panelInstances;
     DataSetClientServices clientServices;
     View view;
-    
     List<DataSetPanel> panels = new LinkedList<DataSetPanel>();
 
     @Inject
@@ -77,33 +84,37 @@ public class DataSetExplorer implements IsWidget {
 
     public void show() {
         clear();
-        
-        clientServices.getPublicDataSetDefs(new RemoteCallback<List<DataSetDef>>() {
-            public void callback(final List<DataSetDef> dataSetDefs) {
-                
-                if (dataSetDefs != null && !dataSetDefs.isEmpty()) {
-                    for (final DataSetDef def : dataSetDefs) {
-                        addDataSetDef(def);
-                    }
-                }
+
+        clientServices.getPublicDataSetDefs(dataSetDefs -> {
+            if (dataSetDefs != null && !dataSetDefs.isEmpty()) {
+                dataSetDefs.stream()
+                        .filter(DataSetExplorer.this::isSupported)
+                        .sorted((o1, o2) -> o1.getName().compareTo(o2.getName()))
+                        .forEach(DataSetExplorer.this::addDataSetDef);
             }
         });
     }
 
+    private boolean isSupported(DataSetDef def) {
+        return SUPPORTED_TYPES.contains(def.getProvider());
+    }
+
     private void addDataSetDef(final DataSetDef def) {
-        // Check panel for the given data set does not exists yet.
+        // Check panel for the given data set does not exists yet and it is supported as well
         if (getDataSetPanel(def.getUUID()) == null) {
             final DataSetPanel panel = panelInstances.get();
             panels.add(panel);
-            panel.show(def, "dataSetsExplorerPanelGroup");
+            panel.show(def,
+                       "dataSetsExplorerPanelGroup");
             view.addPanel(panel.view);
         }
     }
 
     private void updateDataSetDef(final DataSetDef def) {
-        DataSetPanel panel = getDataSetPanel(def.getUUID()); 
+        DataSetPanel panel = getDataSetPanel(def.getUUID());
         if (panel != null) {
-            panel.show(def, "dataSetsExplorerPanelGroup");
+            panel.show(def,
+                       "dataSetsExplorerPanelGroup");
             panel.close();
         }
     }
@@ -118,42 +129,42 @@ public class DataSetExplorer implements IsWidget {
         }
         return null;
     }
-    
+
     private void clear() {
         panels.clear();
         view.clear();
     }
-    
+
     // Be aware of data set lifecycle events
 
     void onDataSetDefRegisteredEvent(@Observes DataSetDefRegisteredEvent event) {
-        checkNotNull("event", event);
+        checkNotNull("event",
+                     event);
 
         final DataSetDef def = event.getDataSetDef();
-        if (def != null && def.isPublic()) {
-            // GWT.log("Data Set Explorer - Data Set Def Registered");
-            addDataSetDef(def);
+        if (def != null && def.isPublic() && isSupported(def)) {
+            // Reload the whole data set panels list.
+            show();
         }
     }
 
     void onDataSetDefModifiedEvent(@Observes DataSetDefModifiedEvent event) {
-        checkNotNull("event", event);
+        checkNotNull("event",
+                     event);
 
         final DataSetDef def = event.getNewDataSetDef();
         if (def != null && def.isPublic()) {
-            // GWT.log("Data Set Explorer - Data Set Def Modified");
             updateDataSetDef(def);
         }
     }
 
     void onDataSetDefRemovedEvent(@Observes DataSetDefRemovedEvent event) {
-        checkNotNull("event", event);
+        checkNotNull("event",
+                     event);
         final DataSetDef def = event.getDataSetDef();
         if (def != null && def.isPublic()) {
-            // GWT.log("Data Set Explorer - Data Set Def Removed");
             // Reload the whole data set panels list.
             show();
         }
     }
-    
 }

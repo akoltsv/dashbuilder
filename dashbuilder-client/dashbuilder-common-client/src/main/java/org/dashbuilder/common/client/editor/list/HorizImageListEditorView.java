@@ -1,22 +1,27 @@
 package org.dashbuilder.common.client.editor.list;
 
+import javax.enterprise.context.Dependent;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.editor.client.Editor;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeUri;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiConstructor;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.*;
-import org.gwtbootstrap3.client.ui.*;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
+import com.google.gwt.user.client.ui.HasAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.Image;
+import org.gwtbootstrap3.client.ui.Tooltip;
 import org.gwtbootstrap3.client.ui.constants.Placement;
 import org.uberfire.mvp.Command;
-
-import javax.enterprise.context.Dependent;
 
 /**
  * <p>The ImageListEditor default view. It places images in an horizontal way.</p>
@@ -75,57 +80,55 @@ public class HorizImageListEditorView<T> extends Composite implements ImageListE
         final VerticalPanel panel = new VerticalPanel();
         panel.setVerticalAlignment(HasAlignment.ALIGN_MIDDLE);
         panel.setHeight("100%");
-        
+
         final Image image = new Image(uri);
         image.setWidth(width);
         image.setHeight(height);
         image.addStyleName(style.image());
         final double alpha = selected ? 1 : 0.2;
         image.getElement().setAttribute("style", "filter: alpha(opacity=5);opacity: " + alpha);
-        image.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(final ClickEvent event) {
-                clickCommand.execute();
-            }
-        });
-        
-        final Popover popover = new Popover();
-        popover.setTitle( heading.asString() );
-        popover.setContent( text.asString() );
-        popover.setWidget(image);
-        popover.setContainer("body");
-        popover.setPlacement(Placement.BOTTOM);
-        popover.setShowDelayMs(1000);
-        
+
+        final Tooltip tooltip = new Tooltip();
+        tooltip.setTitle( text.asString() );
+        tooltip.setWidget(image);
+        tooltip.setContainer("body");
+        tooltip.setPlacement(Placement.BOTTOM);
+        tooltip.setIsAnimated(false);
+        tooltip.setShowDelayMs(100);
+
         final HTML label = new HTML(heading.asString());
         final HorizontalPanel labelPanel = new HorizontalPanel();
         labelPanel.setWidth("100%");
         labelPanel.setHorizontalAlignment(HasAlignment.ALIGN_CENTER);
         labelPanel.add(label);
 
-        panel.add(popover);
+        panel.add(tooltip);
         panel.add(labelPanel);        
         mainPanel.add(panel);
-        
+
+        image.addClickHandler(e -> {
+            tooltip.hide();
+            tooltip.destroy();
+            clickCommand.execute();
+        });
+
         return this;
     }
 
     @Override
-    public ImageListEditorView<T> addHelpContent(final String title, final String content, final Placement placement) {
-        final Popover popover = new Popover(mainPanel);
-        popover.setContainer("body");
-        popover.setShowDelayMs(1000);
-        popover.setPlacement(placement);
-        popover.setTitle(title);
-        popover.setContent(content);
-        helpPanel.add(popover);
+    public ImageListEditorView<T> setHelpContent(final String title, final String content, final Placement placement) {
+        final Tooltip tooltip = new Tooltip(mainPanel);
+        tooltip.setContainer("body");
+        tooltip.setShowDelayMs(1000);
+        tooltip.setPlacement(placement);
+        tooltip.setTitle(content);
+        helpPanel.add(tooltip);
         return this;
     }
 
     @Override
     public ImageListEditorView<T> showError(SafeHtml message) {
         errorTooltip.setTitle(message.asString());
-        errorTooltip.reconfigure();
         errorPanel.removeStyleName(style.errorPanel());
         errorPanel.addStyleName(style.errorPanelWithError());
         return null;
@@ -134,7 +137,6 @@ public class HorizImageListEditorView<T> extends Composite implements ImageListE
     @Override
     public ImageListEditorView<T> clearError() {
         errorTooltip.setTitle("");
-        errorTooltip.reconfigure();
         errorPanel.removeStyleName(style.errorPanelWithError());
         errorPanel.addStyleName(style.errorPanel());
         return this;

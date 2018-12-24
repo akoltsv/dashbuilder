@@ -117,8 +117,7 @@ public class DisplayerSettingsEditorTest {
                 .number("amount")
                 .buildDataSet());
 
-        // Call to init implies calling to presenter.show() internally (see above)
-        presenter.init(DisplayerSettingsFactory.newBarChartSettings()
+        when(displayer.getDisplayerSettings()).thenReturn(DisplayerSettingsFactory.newBarChartSettings()
                 .dataset("dset")
                 .group("dept")
                 .column("dept").format("Department")
@@ -134,11 +133,14 @@ public class DisplayerSettingsEditorTest {
                 .refreshOn(3, false)
                 .buildSettings());
 
+        // Call to init implies calling to presenter.show() internally (see above)
+        presenter.init(displayer);
+
         verify(view).clear();
         verify(view).addTextProperty(TITLE, "Sales by dept");
         verify(view).addBooleanProperty(TITLE_VISIBLE, true);
-        verify(view).addBooleanProperty(ALLOW_EXPORT_CSV, false);
-        verify(view).addBooleanProperty(ALLOW_EXPORT_EXCEL, false);
+        verify(view, never()).addBooleanProperty(EXPORT_TO_CSV, false);
+        verify(view, never()).addBooleanProperty(EXPORT_TO_XLS, false);
         verify(view).addTextProperty(eq(CHART_WIDTH), eq("400"), any(DisplayerSettingsEditor.LongValidator.class));
         verify(view).addTextProperty(eq(CHART_HEIGHT), eq("200"), any(DisplayerSettingsEditor.LongValidator.class));
         verify(view).addColorProperty(eq(CHART_BGCOLOR), anyString());
@@ -150,6 +152,7 @@ public class DisplayerSettingsEditorTest {
         verify(view).addBooleanProperty(CHART_SHOWLEGEND, true);
         verify(view).addListProperty(eq(CHART_LEGENDPOSITION), anyListOf(String.class), anyString());
         verify(view).addBooleanProperty(XAXIS_SHOWLABELS, true);
+        verify(view).addTextProperty(XAXIS_LABELSANGLE, "0");
         verify(view).addTextProperty(XAXIS_TITLE, "Depts");
         verify(view).addBooleanProperty(YAXIS_SHOWLABELS, true);
         verify(view).addTextProperty(YAXIS_TITLE, "Amount $");
@@ -169,11 +172,13 @@ public class DisplayerSettingsEditorTest {
     @Test
     public void testChangeAttributes() {
         DisplayerSettings settings = DisplayerSettingsFactory.newBarChartSettings().buildSettings();
-        presenter.init(settings);
+        when(displayer.getDisplayerSettings()).thenReturn(settings);
+
+        presenter.init(displayer);
         presenter.onAttributeChanged(TITLE.getFullId(), "Test");
         presenter.onAttributeChanged(TITLE_VISIBLE.getFullId(), "true");
-        presenter.onAttributeChanged(ALLOW_EXPORT_CSV.getFullId(), "false");
-        presenter.onAttributeChanged(ALLOW_EXPORT_EXCEL.getFullId(), "false");
+        presenter.onAttributeChanged(EXPORT_TO_CSV.getFullId(), "false");
+        presenter.onAttributeChanged(EXPORT_TO_XLS.getFullId(), "false");
         presenter.onAttributeChanged(CHART_HEIGHT.getFullId(), "400");
         presenter.onAttributeChanged("columns.amount.name", "Total");
         presenter.onAttributeChanged("columns.amount.pattern", "#.###,00");
@@ -202,20 +207,29 @@ public class DisplayerSettingsEditorTest {
 
         when(displayer.getDisplayerConstraints()).thenReturn(
                 new DisplayerConstraints(null)
-                        .supportsAttribute(TABLE_GROUP));
+                        .supportsAttribute(TABLE_GROUP)
+                        .supportsAttribute(EXPORT_GROUP));
 
-        presenter.init(DisplayerSettingsFactory.newTableSettings()
+        when(displayer.getDisplayerSettings()).thenReturn(DisplayerSettingsFactory.newTableSettings()
                 .tablePageSize(10)
                 .tableWidth(500)
                 .tableOrderEnabled(true)
                 .tableOrderDefault("date", SortOrder.ASCENDING)
+                .tableColumnPickerEnabled(false)
+                .allowCsvExport(true)
+                .allowExcelExport(false)
                 .buildSettings());
+
+        presenter.init(displayer);
 
         verify(view).clear();
         verify(view).addTextProperty(eq(TABLE_WIDTH), eq("500"), any(DisplayerSettingsEditor.LongValidator.class));
         verify(view).addBooleanProperty(TABLE_SORTENABLED, true);
         verify(view).addListProperty(eq(TABLE_SORTCOLUMNID), anyListOf(String.class), eq("date"));
         verify(view).addListProperty(eq(TABLE_SORTORDER), anyListOf(String.class), eq(SortOrder.ASCENDING.toString()));
+        verify(view).addBooleanProperty(TABLE_COLUMN_PICKER_ENABLED, false);
+        verify(view).addBooleanProperty(EXPORT_TO_CSV, true);
+        verify(view).addBooleanProperty(EXPORT_TO_XLS, false);
         verify(view).show();
     }
 
@@ -226,9 +240,12 @@ public class DisplayerSettingsEditorTest {
                 new DisplayerConstraints(null)
                         .supportsAttribute(METER_GROUP));
 
-        presenter.init(DisplayerSettingsFactory.newMeterChartSettings()
-                .meter(0, 100, 500, 900)
-                .buildSettings());
+
+        when(displayer.getDisplayerSettings()).thenReturn(DisplayerSettingsFactory.newMeterChartSettings()
+                        .meter(0, 100, 500, 900)
+                        .buildSettings());
+
+        presenter.init(displayer);
 
         verify(view).clear();
         verify(view).addTextProperty(eq(METER_START), eq("0"), any(DisplayerSettingsEditor.LongValidator.class));
@@ -249,7 +266,9 @@ public class DisplayerSettingsEditorTest {
                 new DisplayerConstraints(null)
                         .supportsAttribute(RENDERER));
 
-        presenter.init(settings);
+        when(displayer.getDisplayerSettings()).thenReturn(settings);
+
+        presenter.init(displayer);
         verify(view).clear();
         verify(view).addListProperty(RENDERER, Arrays.asList("rendererA", "rendererB"), "rendererB");
         verify(view).show();
@@ -263,7 +282,9 @@ public class DisplayerSettingsEditorTest {
                 .supportsAttribute(TITLE)
                 .supportsAttribute(FILTER_GROUP));
 
-        presenter.init(DisplayerSettingsFactory.newBarChartSettings().buildSettings());
+        when(displayer.getDisplayerSettings()).thenReturn(DisplayerSettingsFactory.newBarChartSettings().buildSettings());
+
+        presenter.init(displayer);
         assertEquals(presenter.isSupported(TYPE), true);
         assertEquals(presenter.isSupported(SUBTYPE), true);
         assertEquals(presenter.isSupported(TITLE), true);
@@ -289,7 +310,8 @@ public class DisplayerSettingsEditorTest {
                 .meter(0, 100, 500, 900)
                 .buildSettings();
 
-        presenter.init(settings);
+        when(displayer.getDisplayerSettings()).thenReturn(settings);
+        presenter.init(displayer);
 
         PropertyFieldValidator validator = presenter.createMeterValidator(settings, 0);
         assertEquals(validator.validate("aaa"), false);

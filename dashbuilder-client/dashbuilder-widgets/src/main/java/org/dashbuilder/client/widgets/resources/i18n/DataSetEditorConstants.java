@@ -63,6 +63,10 @@ public interface DataSetEditorConstants extends Messages {
     String attributeId();
     String attributeColumnType();
     String attributeColumnType_description();
+    String labelColumnType_description();
+    String textColumnType_description();
+    String numberColumnType_description();
+    String dateColumnType_description();
     String attributeUUID();
     String attributeUUID_description();
     String attributeName();
@@ -78,6 +82,7 @@ public interface DataSetEditorConstants extends Messages {
     String sql_datasource();
     String sql_datasource_description();
     String sql_datasource_placeHolder();
+    String sql_datasource_selectHint();
     String sql_schema();
     String sql_schema_description();
     String sql_schema_placeHolder();
@@ -85,6 +90,7 @@ public interface DataSetEditorConstants extends Messages {
     String sql_table_description();
     String sql_table_placeHolder();
     String sql_source();
+    String sql_source_description();
     String sql_query();
     String sql_query_description();
     String sql_query_placeHolder();

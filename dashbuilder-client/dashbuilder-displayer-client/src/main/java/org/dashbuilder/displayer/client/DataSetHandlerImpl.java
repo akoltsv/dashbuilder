@@ -18,14 +18,16 @@ package org.dashbuilder.displayer.client;
 import org.dashbuilder.common.client.error.ClientRuntimeError;
 import org.dashbuilder.dataset.*;
 import org.dashbuilder.dataset.client.DataSetClientServices;
+import org.dashbuilder.dataset.client.DataSetExportReadyCallback;
 import org.dashbuilder.dataset.client.DataSetReadyCallback;
-import org.dashbuilder.dataset.engine.group.IntervalBuilder;
-import org.dashbuilder.dataset.engine.group.IntervalBuilderLocator;
 import org.dashbuilder.dataset.filter.DataSetFilter;
 import org.dashbuilder.dataset.group.*;
 import org.dashbuilder.dataset.sort.ColumnSort;
 import org.dashbuilder.dataset.sort.DataSetSort;
 import org.dashbuilder.dataset.sort.SortOrder;
+import org.dashbuilder.displayer.client.export.ExportCallback;
+import org.dashbuilder.displayer.client.export.ExportFormat;
+import org.uberfire.backend.vfs.Path;
 
 import java.util.*;
 
@@ -230,49 +232,86 @@ public class DataSetHandlerImpl implements DataSetHandler {
             return null;
         }
 
-        // For grouped by date data sets, locate the interval corresponding to the row specified
-        ColumnGroup cg = column.getColumnGroup();
-        DataSetMetadata metadata = clientServices.getMetadata(lookupBase.getDataSetUUID());
-        if (cg != null && metadata != null) {
-            IntervalBuilderLocator intervalBuilderLocator = clientServices.getIntervalBuilderLocator();
-            ColumnType columnType = metadata.getColumnType(cg.getSourceId());
-            if (columnType == null) {
-                throw new RuntimeException("Column type not found in data set metadata: " + cg.getSourceId());
-            }
-            IntervalBuilder intervalBuilder = intervalBuilderLocator.lookup(columnType, cg.getStrategy());
-            Interval target = intervalBuilder.locate(column, row);
-
-            // The resulting interval must be portable.
-            Interval result = new Interval(target.getName(), target.getIndex());
-            result.setType(target.getType());
-            result.setMinValue(target.getMinValue());
-            result.setMaxValue(target.getMaxValue());
-            return result;
-        }
-
-        // Return the interval by name.
+        // Get the target value
         List values = column.getValues();
-        if (row >= values.size()) {
-            return null;
-        }
-        Object value = values.get(row);
+        Object value = row < values.size() ? values.get(row) : null;
         if (value == null) {
             return null;
         }
 
-        return new Interval(value.toString());
+        Interval result = new Interval(value.toString(), row);
+        result.setType(column.getIntervalType());
+        result.setMinValue(column.getMinValue());
+        result.setMaxValue(column.getMaxValue());
+        return result;
+    }
+
+    @Override
+    public void exportCurrentDataSetLookup(ExportFormat format, int maxRows, ExportCallback callback, Map<String,String> columnNameMap) {
+
+        // Export an empty data set does not make sense
+        if (lastLookedUpDataSet == null || lastLookedUpDataSet.getRowCount() == 0) {
+            callback.noData();
+            return;
+        }
+        // Ensure the entire dataset does not exceed the maximum export limit
+        int allRows = lastLookedUpDataSet.getRowCountNonTrimmed();
+        if (maxRows > 0 && allRows > maxRows) {
+            callback.tooManyRows(allRows);
+            return;
+        }
+        try {
+            // Create a backend export callback
+            DataSetExportReadyCallback exportReadyCallback = new DataSetExportReadyCallback() {
+
+                @Override
+                public void exportReady(Path exportFilePath) {
+                    final String u = clientServices.getDownloadFileUrl(exportFilePath);
+                    callback.exportFileUrl(u);
+                }
+                @Override
+                public void onError(ClientRuntimeError error) {
+                    callback.error(error);
+                }
+            };
+
+            // Export the entire data set
+            DataSetLookup exportLookup = getCurrentDataSetLookup().cloneInstance();
+            exportLookup.setRowOffset(0);
+            exportLookup.setNumberOfRows(maxRows);
+
+            // Make sure the column names are set as specified
+            if (exportLookup.getLastGroupOp() != null && columnNameMap != null) {
+                for (GroupFunction groupFunction : exportLookup.getLastGroupOp().getGroupFunctions()) {
+                    String columnId = groupFunction.getColumnId();
+                    if (columnNameMap.containsKey(columnId)) {
+                        String columnName = columnNameMap.get(columnId);
+                        groupFunction.setColumnId(columnName);
+                    }
+                }
+            }
+
+            if (ExportFormat.XLS.equals(format)) {
+                clientServices.exportDataSetExcel(exportLookup, exportReadyCallback);
+            } else {
+                clientServices.exportDataSetCSV(exportLookup, exportReadyCallback);
+            }
+        }
+        catch (Exception e) {
+            callback.error(new ClientRuntimeError(e));
+        }
     }
 
     // Internal filter/drillDown implementation logic
 
-    protected Map<String,List<GroupOpFilter>> _groupOpsAdded = new HashMap<String,List<GroupOpFilter>>();
-    protected Map<String,List<GroupOpFilter>> _groupOpsSelected = new HashMap<String,List<GroupOpFilter>>();
+    protected Map<String,List<GroupOpFilter>> _groupOpsAdded = new HashMap<>();
+    protected Map<String,List<GroupOpFilter>> _groupOpsSelected = new HashMap<>();
 
     protected void _filter(int index, DataSetGroup op, boolean drillDown) {
 
         ColumnGroup cgroup = op.getColumnGroup();
         String columnId = cgroup.getColumnId();
-        if (!_groupOpsAdded.containsKey(columnId)) _groupOpsAdded.put(columnId, new ArrayList<GroupOpFilter>());
+        if (!_groupOpsAdded.containsKey(columnId)) _groupOpsAdded.put(columnId, new ArrayList<>());
         List<GroupOpFilter> filterOps = _groupOpsAdded.get(columnId);
 
         // When adding an external filter, look first if it exists an existing filter already.
@@ -292,13 +331,11 @@ public class DataSetHandlerImpl implements DataSetHandler {
 
     protected void _select(DataSetGroup op, List<Interval> intervalList) {
         GroupOpFilter groupOpFilter = new GroupOpFilter(op, true);
-
         op.setSelectedIntervalList(intervalList);
-        //op.getGroupFunctions().clear();
 
         String columnId = op.getColumnGroup().getColumnId();
         if (!_groupOpsSelected.containsKey(columnId)) {
-            _groupOpsSelected.put(columnId, new ArrayList<GroupOpFilter>());
+            _groupOpsSelected.put(columnId, new ArrayList<>());
         }
         _groupOpsSelected.get(columnId).add(groupOpFilter);
     }
@@ -378,8 +415,8 @@ public class DataSetHandlerImpl implements DataSetHandler {
         private GroupOpFilter(DataSetGroup op, boolean drillDown) {
             this.groupOp = op;
             this.drillDown = drillDown;
-            this.groupFunctions = new ArrayList<GroupFunction>(op.getGroupFunctions());
-            this.intervalList = new ArrayList<Interval>(op.getSelectedIntervalList());
+            this.groupFunctions = new ArrayList<>(op.getGroupFunctions());
+            this.intervalList = new ArrayList<>(op.getSelectedIntervalList());
         }
 
         public String toString() {

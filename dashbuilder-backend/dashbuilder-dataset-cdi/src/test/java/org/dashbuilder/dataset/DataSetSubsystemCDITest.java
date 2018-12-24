@@ -15,23 +15,37 @@
  */
 package org.dashbuilder.dataset;
 
+import org.dashbuilder.Bootstrap;
 import org.dashbuilder.test.BaseCDITest;
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import javax.inject.Inject;
+
 @RunWith(Arquillian.class)
 public class DataSetSubsystemCDITest extends BaseCDITest {
 
-    DataSetFilterTest dataSetFilterTest = new DataSetFilterTest();
-    DataSetGroupTest dataSetGroupTest = new DataSetGroupTest();
-    DataSetNestedGroupTest nestedGroupTest = new DataSetNestedGroupTest();
-    DataSetSortTest dataSetSortTest = new DataSetSortTest();
-    DataSetTrimTest dataSetTrimTest = new DataSetTrimTest();
+    @Inject
+    Bootstrap bootstrap;
+
+    DataSetFilterTest dataSetFilterTest;
+    DataSetGroupTest dataSetGroupTest;
+    DataSetNestedGroupTest nestedGroupTest;
+    DataSetSortTest dataSetSortTest;
+    DataSetTrimTest dataSetTrimTest;
 
     @Before
     public void setUp() throws Exception {
+        bootstrap.init();
+
+        dataSetFilterTest = new DataSetFilterTest();
+        dataSetGroupTest = new DataSetGroupTest();
+        nestedGroupTest = new DataSetNestedGroupTest();
+        dataSetSortTest = new DataSetSortTest();
+        dataSetTrimTest = new DataSetTrimTest();
+
         dataSetFilterTest.setUp();
         dataSetGroupTest.setUp();
         nestedGroupTest.setUp();
@@ -62,13 +76,17 @@ public class DataSetSubsystemCDITest extends BaseCDITest {
     @Test
     public void testGroup() throws Exception {
         dataSetGroupTest.testDataSetFunctions();
+        dataSetGroupTest.testDateMinMaxFunctions();
+        dataSetGroupTest.testNumberMinMaxFunctions();
         dataSetGroupTest.testGroupByLabelDynamic();
+        dataSetGroupTest.testGroupByExcludeLabelColumn();
         dataSetGroupTest.testGroupByYearDynamic();
         dataSetGroupTest.testGroupByMonthDynamic();
         dataSetGroupTest.testGroupByMonthDynamicNonEmpty();
-        dataSetGroupTest.testGroupByDayDynamic();
-        dataSetGroupTest.testGroupByWeek();
+        dataSetGroupTest.testGroupByDayOfWeekDynamic();
+        dataSetGroupTest.testGroupByDayOfWeekFixed();
         dataSetGroupTest.testGroupByMonthReverse();
+        dataSetGroupTest.testGroupByFixedTrim();
         dataSetGroupTest.testGroupByMonthFixed();
         dataSetGroupTest.testGroupByMonthFirstMonth();
         dataSetGroupTest.testGroupByMonthFirstMonthReverse();
@@ -76,6 +94,7 @@ public class DataSetSubsystemCDITest extends BaseCDITest {
         dataSetGroupTest.testGroupByDateOneRow();
         dataSetGroupTest.testGroupByDateOneDay();
         dataSetGroupTest.testGroupAndCountSameColumn();
+        dataSetGroupTest.testGroupNumberAsLabel();
     }
 
     @Test
@@ -100,6 +119,7 @@ public class DataSetSubsystemCDITest extends BaseCDITest {
     @Test
     public void testTrim() throws Exception {
         dataSetTrimTest.testTrim();
+        dataSetTrimTest.testTrimGroup();
         dataSetTrimTest.testDuplicatedColumns();
     }
 }

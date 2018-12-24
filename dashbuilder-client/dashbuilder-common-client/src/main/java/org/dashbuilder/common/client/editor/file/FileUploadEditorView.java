@@ -1,5 +1,7 @@
 package org.dashbuilder.common.client.editor.file;
 
+import javax.enterprise.context.Dependent;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.editor.client.Editor;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -10,13 +12,10 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Widget;
-import org.gwtbootstrap3.client.ui.Popover;
 import org.gwtbootstrap3.client.ui.Tooltip;
 import org.gwtbootstrap3.client.ui.constants.Placement;
 import org.uberfire.ext.widgets.common.client.common.FileUpload;
 import org.uberfire.mvp.Command;
-
-import javax.enterprise.context.Dependent;
 
 /**
  * <p>The FileUploadEditor view.</p>
@@ -102,13 +101,12 @@ public class FileUploadEditorView extends Composite implements FileUploadEditor.
 
     @Override
     public FileUploadEditor.View addHelpContent(final String title, final String content, final Placement placement) {
-        final Popover popover = new Popover(fileUpload);
-        popover.setContainer("body");
-        popover.setShowDelayMs(1000);
-        popover.setPlacement(placement);
-        popover.setTitle(title);
-        popover.setContent(content);
-        formPanel.add(popover);
+        final Tooltip tooltip = new Tooltip(fileUpload);
+        tooltip.setContainer("body");
+        tooltip.setShowDelayMs(1000);
+        tooltip.setPlacement(placement);
+        tooltip.setTitle(content);
+        formPanel.add(tooltip);
         return this;
     }
 
@@ -163,7 +161,6 @@ public class FileUploadEditorView extends Composite implements FileUploadEditor.
     public FileUploadEditor.View showError(final SafeHtml message) {
         mainPanel.addStyleName(STYLE_ERROR);
         errorTooltip.setTitle(message.asString());
-        errorTooltip.reconfigure();
         return this;
     }
 
@@ -171,9 +168,6 @@ public class FileUploadEditorView extends Composite implements FileUploadEditor.
     public FileUploadEditor.View clearError() {
         mainPanel.removeStyleName(STYLE_ERROR);
         errorTooltip.setTitle("");
-        errorTooltip.reconfigure();
         return this;
     }
-    
-
 }

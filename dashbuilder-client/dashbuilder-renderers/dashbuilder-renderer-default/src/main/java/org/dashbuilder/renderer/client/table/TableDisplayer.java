@@ -15,6 +15,7 @@
  */
 package org.dashbuilder.renderer.client.table;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -23,6 +24,8 @@ import javax.inject.Inject;
 
 import org.dashbuilder.common.client.StringUtils;
 import org.dashbuilder.common.client.error.ClientRuntimeError;
+import org.dashbuilder.common.client.widgets.FilterLabel;
+import org.dashbuilder.common.client.widgets.FilterLabelSet;
 import org.dashbuilder.dataset.ColumnType;
 import org.dashbuilder.dataset.DataSetLookupConstraints;
 import org.dashbuilder.dataset.client.DataSetReadyCallback;
@@ -33,19 +36,21 @@ import org.dashbuilder.displayer.ColumnSettings;
 import org.dashbuilder.displayer.DisplayerAttributeDef;
 import org.dashbuilder.displayer.DisplayerAttributeGroupDef;
 import org.dashbuilder.displayer.DisplayerConstraints;
-import org.dashbuilder.displayer.client.AbstractDisplayer;
 import org.dashbuilder.dataset.DataColumn;
 import org.dashbuilder.dataset.DataSet;
 
 import org.dashbuilder.dataset.sort.SortOrder;
+import org.dashbuilder.displayer.client.AbstractGwtDisplayer;
 import org.dashbuilder.displayer.client.Displayer;
+import org.dashbuilder.displayer.client.export.ExportCallback;
+import org.dashbuilder.displayer.client.export.ExportFormat;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.mvp.Command;
 
 @Dependent
-public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
+public class TableDisplayer extends AbstractGwtDisplayer<TableDisplayer.View> {
 
-    public interface View extends AbstractDisplayer.View<TableDisplayer> {
+    public interface View extends AbstractGwtDisplayer.View<TableDisplayer> {
 
         String getGroupsTitle();
 
@@ -53,7 +58,7 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
 
         void showTitle(String title);
 
-        void createTable(int pageSize);
+        void createTable(int pageSize, FilterLabelSet widget);
 
         void redrawTable();
 
@@ -65,40 +70,50 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
 
         void setPagerEnabled(boolean enabled);
 
+        void setColumnPickerEnabled(boolean enabled);
+
+        void setExportToCsvEnabled(boolean enabled);
+
+        void setExportToXlsEnabled(boolean enabled);
+
         void addColumn(ColumnType columnType, String columnId, String columnName, int index, boolean selectEnabled, boolean sortEnabled);
-
-        void clearFilterStatus();
-
-        void addFilterValue(String value);
-
-        void addFilterReset();
 
         void gotoFirstPage();
 
         int getLastOffset();
+
+        void exportNoData();
+
+        void exportTooManyRows(int rowNum, int limit);
+
+        void exportFileUrl(String url);
     }
 
     protected View view;
     protected int totalRows = 0;
     protected String lastOrderedColumn = null;
     protected SortOrder lastSortOrder = null;
-    protected Command onCellSelectedCommand = new Command() {public void execute() {}};
+    protected List<Command> onCellSelectedCommands = new ArrayList<>();
     protected String selectedCellColumn = null;
     protected Integer selectedCellRow = null;
-
-    public TableDisplayer() {
-        this(new TableDisplayerView());
-    }
+    protected int exportRowNumMax = 100000;
+    protected FilterLabelSet filterLabelSet;
 
     @Inject
-    public TableDisplayer(View view) {
+    public TableDisplayer(View view, FilterLabelSet filterLabelSet) {
         this.view = view;
         this.view.init(this);
+        this.filterLabelSet = filterLabelSet;
+        this.filterLabelSet.setOnClearAllCommand(this::onFilterClearAll);
     }
 
     @Override
     public View getView() {
         return view;
+    }
+
+    public FilterLabelSet getFilterLabelSet() {
+        return filterLabelSet;
     }
 
     public int getTotalRows() {
@@ -121,8 +136,16 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
         return selectedCellRow;
     }
 
-    public void setOnCellSelectedCommand(Command onCellSelectedCommand) {
-        this.onCellSelectedCommand = onCellSelectedCommand;
+    public int getExportRowNumMax() {
+        return exportRowNumMax;
+    }
+
+    public void setExportRowNumMax(int exportRowNumMax) {
+        this.exportRowNumMax = exportRowNumMax;
+    }
+
+    public void addOnCellSelectedCommand(Command onCellSelectedCommand) {
+        this.onCellSelectedCommands.add(onCellSelectedCommand);
     }
 
     @Override
@@ -131,8 +154,6 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
         DataSetLookupConstraints lookupConstraints = new DataSetLookupConstraints()
                 .setGroupAllowed(true)
                 .setGroupRequired(false)
-                .setMaxColumns(-1)
-                .setMinColumns(1)
                 .setExtraColumnsAllowed(true)
                 .setGroupsTitle(view.getGroupsTitle())
                 .setColumnsTitle(view.getColumnsTitle());
@@ -144,6 +165,7 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
                 .supportsAttribute( DisplayerAttributeGroupDef.FILTER_GROUP )
                 .supportsAttribute( DisplayerAttributeGroupDef.REFRESH_GROUP )
                 .supportsAttribute( DisplayerAttributeGroupDef.GENERAL_GROUP)
+                .supportsAttribute( DisplayerAttributeGroupDef.EXPORT_GROUP)
                 .supportsAttribute( DisplayerAttributeGroupDef.TABLE_GROUP );
     }
 
@@ -180,11 +202,14 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
         List<DataColumn> dataColumns = dataSet.getColumns();
         int width = displayerSettings.getTableWidth();
 
-        view.createTable(displayerSettings.getTablePageSize());
+        view.createTable(displayerSettings.getTablePageSize(), filterLabelSet);
         view.setWidth(width == 0 ? dataColumns.size() * 100 + 40 : width);
         view.setSortEnabled(displayerSettings.isTableSortEnabled());
         view.setTotalRows(totalRows);
         view.setPagerEnabled(displayerSettings.getTablePageSize() < dataSet.getRowCountNonTrimmed());
+        view.setColumnPickerEnabled(displayerSettings.isTableColumnPickerEnabled());
+        view.setExportToCsvEnabled(displayerSettings.isCSVExportAllowed());
+        view.setExportToXlsEnabled(displayerSettings.isExcelExportAllowed());
 
         for ( int i = 0; i < dataColumns.size(); i++ ) {
             DataColumn dataColumn = dataColumns.get(i);
@@ -216,7 +241,7 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
     }
 
     protected void updateFilterStatus() {
-        view.clearFilterStatus();
+        filterLabelSet.clear();
         Set<String> columnFilters = filterColumns();
         if (displayerSettings.isFilterEnabled() && !columnFilters.isEmpty()) {
 
@@ -225,10 +250,10 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
                 DataColumn column = dataSet.getColumnById(columnId);
                 for (Interval interval : selectedValues) {
                     String formattedValue = formatInterval(interval, column);
-                    view.addFilterValue(formattedValue);
+                    FilterLabel filterLabel = filterLabelSet.addLabel(formattedValue);
+                    filterLabel.setOnRemoveCommand(() -> onFilterLabelRemoved(columnId, interval.getIndex()));
                 }
             }
-            view.addFilterReset();
         }
     }
 
@@ -244,7 +269,9 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
         if (displayerSettings.isFilterEnabled()) {
             selectedCellColumn = columnId;
             selectedCellRow = rowIndex;
-            onCellSelectedCommand.execute();
+            for(Command cmd : onCellSelectedCommands){
+                cmd.execute();
+            }
             if (displayerSettings.isFilterSelfApplyEnabled()) {
                 view.gotoFirstPage();
             }
@@ -266,7 +293,7 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
     public void filterReset() {
         selectedCellColumn = null;
         selectedCellRow = null;
-        view.clearFilterStatus();
+        filterLabelSet.clear();
         super.filterReset();
     }
 
@@ -294,6 +321,53 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
             });
         } catch (Exception e) {
             showError(new ClientRuntimeError(e));
+        }
+    }
+
+    public void export(ExportFormat format) {
+        super.export(format, exportRowNumMax, new ExportCallback() {
+
+            @Override
+            public void noData() {
+                view.exportNoData();
+            }
+
+            @Override
+            public void tooManyRows(int rowNum) {
+                view.exportTooManyRows(rowNum, exportRowNumMax);
+            }
+
+            @Override
+            public void exportFileUrl(String url) {
+                view.exportFileUrl(url);
+            }
+
+            @Override
+            public void error(ClientRuntimeError error) {
+                view.error(error);
+            }
+        });
+    }
+
+    // Filter label set component notifications
+
+    void onFilterLabelRemoved(String columnId, int row) {
+        super.filterUpdate(columnId, row);
+
+        // Update the displayer view in order to reflect the current selection
+        // (only if not has already been redrawn in the previous filterUpdate() call)
+        if (!displayerSettings.isFilterSelfApplyEnabled()) {
+            updateVisualization();
+        }
+    }
+
+    void onFilterClearAll() {
+        filterReset();
+
+        // Update the displayer view in order to reflect the current selection
+        // (only if not has already been redrawn in the previous filterUpdate() call)
+        if (!displayerSettings.isFilterSelfApplyEnabled()) {
+            updateVisualization();
         }
     }
 

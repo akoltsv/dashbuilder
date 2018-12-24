@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.dashbuilder</groupId>
     <artifactId>dashbuilder-parent</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -34,7 +34,7 @@
         <configuration>
           <finalName>dashbuilder-${project.version}</finalName>
           <descriptors>
-            <descriptor>src/main/assembly/assembly-tomcat-7.xml</descriptor>
+            <descriptor>src/main/assembly/assembly-tomcat-8.xml</descriptor>
             <descriptor>src/main/assembly/assembly-wildfly-10.xml</descriptor>
           </descriptors>
           <archive>
@@ -131,7 +131,7 @@
 
     <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
-      <artifactId>hibernate-jpa-2.0-api</artifactId>
+      <artifactId>hibernate-jpa-2.1-api</artifactId>
     </dependency>
 
     <dependency>
@@ -160,27 +160,20 @@
       <groupId>org.jboss.weld</groupId>
       <artifactId>weld-api</artifactId>
     </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.weld</groupId>
-      <artifactId>weld-core</artifactId>
-    </dependency>
-    
+
     <dependency>
       <groupId>org.jboss.weld.servlet</groupId>
       <artifactId>weld-servlet-core</artifactId>
-      <exclusions>
-        <!-- Classes from weld-core-impl already present in weld-core -->
-        <exclusion>
-          <groupId>org.jboss.weld</groupId>
-          <artifactId>weld-core-impl</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
-    
     <dependency>
-      <groupId>org.jboss.weld</groupId>
-      <artifactId>weld-spi</artifactId>
+      <groupId>org.jboss.weld.se</groupId>
+      <artifactId>weld-se-core</artifactId>
+    </dependency>
+
+    <!-- UF Security management provider for Tomcat. -->
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-security-management-tomcat</artifactId>
     </dependency>
     
   </dependencies>

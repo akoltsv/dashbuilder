@@ -27,8 +27,21 @@ public class DisplayerAttributeDef {
 
     public static final DisplayerAttributeDef TITLE = new DisplayerAttributeDef("title", DisplayerAttributeGroupDef.GENERAL_GROUP);
     public static final DisplayerAttributeDef TITLE_VISIBLE = new DisplayerAttributeDef("visible", DisplayerAttributeGroupDef.GENERAL_GROUP);
+
+    /**
+     * @deprecated Replaced by {@link #EXPORT_TO_CSV}. (Kept for backward compatibility)
+     * @since 0.6
+     */
     public static final DisplayerAttributeDef ALLOW_EXPORT_CSV = new DisplayerAttributeDef("allow_csv", DisplayerAttributeGroupDef.GENERAL_GROUP);
+
+    /**
+     * @deprecated Replaced by {@link #EXPORT_TO_XLS}. (Kept for backward compatibility)
+     * @since 0.6
+     */
     public static final DisplayerAttributeDef ALLOW_EXPORT_EXCEL = new DisplayerAttributeDef("allow_excel", DisplayerAttributeGroupDef.GENERAL_GROUP);
+
+    public static final DisplayerAttributeDef EXPORT_TO_CSV = new DisplayerAttributeDef("export_csv", DisplayerAttributeGroupDef.EXPORT_GROUP);
+    public static final DisplayerAttributeDef EXPORT_TO_XLS = new DisplayerAttributeDef("export_xls", DisplayerAttributeGroupDef.EXPORT_GROUP);
 
     public static final DisplayerAttributeDef REFRESH_STALE_DATA = new DisplayerAttributeDef("staleData", DisplayerAttributeGroupDef.REFRESH_GROUP);
     public static final DisplayerAttributeDef REFRESH_INTERVAL = new DisplayerAttributeDef("interval", DisplayerAttributeGroupDef.REFRESH_GROUP);
@@ -37,6 +50,10 @@ public class DisplayerAttributeDef {
     public static final DisplayerAttributeDef FILTER_SELFAPPLY_ENABLED = new DisplayerAttributeDef("selfapply", DisplayerAttributeGroupDef.FILTER_GROUP);
     public static final DisplayerAttributeDef FILTER_NOTIFICATION_ENABLED = new DisplayerAttributeDef("notification", DisplayerAttributeGroupDef.FILTER_GROUP);
     public static final DisplayerAttributeDef FILTER_LISTENING_ENABLED = new DisplayerAttributeDef("listening", DisplayerAttributeGroupDef.FILTER_GROUP);
+
+    public static final DisplayerAttributeDef SELECTOR_WIDTH = new DisplayerAttributeDef("width", DisplayerAttributeGroupDef.SELECTOR_GROUP);
+    public static final DisplayerAttributeDef SELECTOR_MULTIPLE = new DisplayerAttributeDef("multiple", DisplayerAttributeGroupDef.SELECTOR_GROUP);
+    public static final DisplayerAttributeDef SELECTOR_SHOW_INPUTS = new DisplayerAttributeDef("inputs_show", DisplayerAttributeGroupDef.SELECTOR_GROUP);
 
     public static final DisplayerAttributeDef CHART_WIDTH = new DisplayerAttributeDef("width", DisplayerAttributeGroupDef.CHART_GROUP);
     public static final DisplayerAttributeDef CHART_HEIGHT = new DisplayerAttributeDef("height", DisplayerAttributeGroupDef.CHART_GROUP);
@@ -58,9 +75,11 @@ public class DisplayerAttributeDef {
     public static final DisplayerAttributeDef TABLE_SORTENABLED = new DisplayerAttributeDef("enabled", DisplayerAttributeGroupDef.TABLE_SORT_GROUP);
     public static final DisplayerAttributeDef TABLE_SORTCOLUMNID = new DisplayerAttributeDef("columnId", DisplayerAttributeGroupDef.TABLE_SORT_GROUP);
     public static final DisplayerAttributeDef TABLE_SORTORDER = new DisplayerAttributeDef("order", DisplayerAttributeGroupDef.TABLE_SORT_GROUP);
+    public static final DisplayerAttributeDef TABLE_COLUMN_PICKER_ENABLED = new DisplayerAttributeDef("show_column_picker", DisplayerAttributeGroupDef.TABLE_GROUP);
 
     public static final DisplayerAttributeDef XAXIS_SHOWLABELS = new DisplayerAttributeDef("labels_show", DisplayerAttributeGroupDef.XAXIS_GROUP);
     public static final DisplayerAttributeDef XAXIS_TITLE = new DisplayerAttributeDef("title", DisplayerAttributeGroupDef.XAXIS_GROUP);
+    public static final DisplayerAttributeDef XAXIS_LABELSANGLE = new DisplayerAttributeDef("labels_angle", DisplayerAttributeGroupDef.XAXIS_GROUP);
     public static final DisplayerAttributeDef YAXIS_SHOWLABELS = new DisplayerAttributeDef("labels_show", DisplayerAttributeGroupDef.YAXIS_GROUP);
     public static final DisplayerAttributeDef YAXIS_TITLE = new DisplayerAttributeDef("title", DisplayerAttributeGroupDef.YAXIS_GROUP);
 
@@ -68,6 +87,9 @@ public class DisplayerAttributeDef {
     public static final DisplayerAttributeDef METER_WARNING = new DisplayerAttributeDef("warning", DisplayerAttributeGroupDef.METER_GROUP);
     public static final DisplayerAttributeDef METER_CRITICAL = new DisplayerAttributeDef("critical", DisplayerAttributeGroupDef.METER_GROUP);
     public static final DisplayerAttributeDef METER_END = new DisplayerAttributeDef("end", DisplayerAttributeGroupDef.METER_GROUP);
+
+    public static final DisplayerAttributeDef HTML_TEMPLATE = new DisplayerAttributeDef("html", DisplayerAttributeGroupDef.HTML_GROUP);
+    public static final DisplayerAttributeDef JS_TEMPLATE = new DisplayerAttributeDef("javascript", DisplayerAttributeGroupDef.HTML_GROUP);
 
     protected String id;
     protected DisplayerAttributeGroupDef parent;

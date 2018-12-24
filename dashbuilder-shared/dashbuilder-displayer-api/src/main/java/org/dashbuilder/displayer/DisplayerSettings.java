@@ -178,7 +178,11 @@ public class DisplayerSettings {
     }
 
     private boolean parseBoolean(String value) {
-        if (value == null || value.trim().length() == 0) return false;
+        return parseBoolean(value, false);
+    }
+
+    private boolean parseBoolean(String value, boolean defaultValue) {
+        if (value == null || value.trim().length() == 0) return defaultValue;
         return Boolean.parseBoolean(value);
     }
 
@@ -295,19 +299,21 @@ public class DisplayerSettings {
     }
 
     public boolean isCSVExportAllowed() {
-        return parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.ALLOW_EXPORT_CSV)));
+        return parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.ALLOW_EXPORT_CSV)))
+                || parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.EXPORT_TO_CSV)));
     }
 
     public void setCSVExportAllowed(boolean csvExportAllowed) {
-        settings.put(getSettingPath(DisplayerAttributeDef.ALLOW_EXPORT_CSV), Boolean.toString(csvExportAllowed));
+        settings.put(getSettingPath(DisplayerAttributeDef.EXPORT_TO_CSV), Boolean.toString(csvExportAllowed));
     }
 
     public boolean isExcelExportAllowed() {
-        return parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.ALLOW_EXPORT_EXCEL)));
+        return parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.ALLOW_EXPORT_EXCEL)))
+        || parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.EXPORT_TO_XLS)));
     }
 
     public void setExcelExportAllowed(boolean excelExportAllowed) {
-        settings.put(getSettingPath(DisplayerAttributeDef.ALLOW_EXPORT_EXCEL), Boolean.toString(excelExportAllowed));
+        settings.put(getSettingPath(DisplayerAttributeDef.EXPORT_TO_XLS), Boolean.toString(excelExportAllowed));
     }
 
     public int getRefreshInterval() {
@@ -358,6 +364,30 @@ public class DisplayerSettings {
         settings.put( getSettingPath( DisplayerAttributeDef.FILTER_LISTENING_ENABLED ), Boolean.toString( filterListeningEnabled ) );
     }
 
+    public int getSelectorWidth() {
+        return parseInt(settings.get(getSettingPath(DisplayerAttributeDef.SELECTOR_WIDTH)), -1);
+    }
+
+    public void setSelectorWidth(int filterWidth) {
+        settings.put(getSettingPath(DisplayerAttributeDef.SELECTOR_WIDTH), Integer.toString(filterWidth));
+    }
+
+    public boolean isSelectorMultiple() {
+        return parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.SELECTOR_MULTIPLE)));
+    }
+
+    public void setSelectorMultiple(boolean filterMultiple) {
+        settings.put(getSettingPath( DisplayerAttributeDef.SELECTOR_MULTIPLE), Boolean.toString(filterMultiple));
+    }
+
+    public boolean isSelectorInputsEnabled() {
+        return parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.SELECTOR_SHOW_INPUTS)), true);
+    }
+
+    public void setSelectorInputsEnabled(boolean enabled) {
+        settings.put(getSettingPath( DisplayerAttributeDef.SELECTOR_SHOW_INPUTS), Boolean.toString(enabled));
+    }
+
     public int getChartWidth() {
         return parseInt( settings.get( getSettingPath( DisplayerAttributeDef.CHART_WIDTH ) ), 500 );
     }
@@ -383,7 +413,7 @@ public class DisplayerSettings {
     }
 
     public int getChartMarginTop() {
-        return parseInt( settings.get( getSettingPath( DisplayerAttributeDef.CHART_MARGIN_TOP ) ), 10 );
+        return parseInt( settings.get( getSettingPath( DisplayerAttributeDef.CHART_MARGIN_TOP ) ), 0 );
     }
 
     public void setChartMarginTop( int chartMarginTop ) {
@@ -391,7 +421,7 @@ public class DisplayerSettings {
     }
 
     public int getChartMarginBottom() {
-        return parseInt(settings.get(getSettingPath(DisplayerAttributeDef.CHART_MARGIN_BOTTOM)), 10);
+        return parseInt(settings.get(getSettingPath(DisplayerAttributeDef.CHART_MARGIN_BOTTOM)), 0);
     }
 
     public void setChartMarginBottom( int chartMarginBottom ) {
@@ -399,7 +429,7 @@ public class DisplayerSettings {
     }
 
     public int getChartMarginLeft() {
-        return parseInt( settings.get( getSettingPath( DisplayerAttributeDef.CHART_MARGIN_LEFT ) ), 10 );
+        return parseInt( settings.get( getSettingPath( DisplayerAttributeDef.CHART_MARGIN_LEFT ) ), 0 );
     }
 
     public void setChartMarginLeft( int chartMarginLeft ) {
@@ -407,7 +437,7 @@ public class DisplayerSettings {
     }
 
     public int getChartMarginRight() {
-        return parseInt( settings.get( getSettingPath( DisplayerAttributeDef.CHART_MARGIN_RIGHT ) ), 10 );
+        return parseInt( settings.get( getSettingPath( DisplayerAttributeDef.CHART_MARGIN_RIGHT ) ), 0 );
     }
 
     public void setChartMarginRight( int chartMarginRight ) {
@@ -480,6 +510,10 @@ public class DisplayerSettings {
         settings.put( getSettingPath( DisplayerAttributeDef.TABLE_SORTENABLED ), Boolean.toString( tableSortEnabled ) );
     }
 
+    public void setTableColumnPickerEnabled(boolean tableColumnPickerEnabled) {
+        settings.put(getSettingPath(DisplayerAttributeDef.TABLE_COLUMN_PICKER_ENABLED), Boolean.toString(tableColumnPickerEnabled));
+    }
+
     public String getTableDefaultSortColumnId() {
         return parseString(settings.get(getSettingPath(DisplayerAttributeDef.TABLE_SORTCOLUMNID)));
     }
@@ -498,6 +532,10 @@ public class DisplayerSettings {
         settings.put( getSettingPath( DisplayerAttributeDef.TABLE_SORTORDER ), tableDefaultSortOrder.toString() );
     }
 
+    public boolean isTableColumnPickerEnabled() {
+        return parseBoolean(settings.get(getSettingPath(DisplayerAttributeDef.TABLE_COLUMN_PICKER_ENABLED)), true);
+    }
+
     public boolean isXAxisShowLabels() {
         return parseBoolean( settings.get( getSettingPath( DisplayerAttributeDef.XAXIS_SHOWLABELS ) ) );
     }
@@ -506,13 +544,13 @@ public class DisplayerSettings {
         settings.put( getSettingPath( DisplayerAttributeDef.XAXIS_SHOWLABELS ), Boolean.toString( axisShowLabels ) );
     }
 
-//    public int getXAxisLabelsAngle() {
-//        return parseInt( settings.get( getSettingPath( DisplayerAttributeDef.XAXIS_LABELSANGLE ) ), 10 );
-//    }
-//
-//    public void setXAxisLabelsAngle( int axisLabelsAngle ) {
-//        settings.put( getSettingPath( DisplayerAttributeDef.XAXIS_LABELSANGLE ), Integer.toString( axisLabelsAngle ) );
-//    }
+    public int getXAxisLabelsAngle() {
+        return parseInt(settings.get(getSettingPath(DisplayerAttributeDef.XAXIS_LABELSANGLE)), 0);
+    }
+
+    public void setXAxisLabelsAngle(int axisLabelsAngle) {
+        settings.put(getSettingPath(DisplayerAttributeDef.XAXIS_LABELSANGLE), Integer.toString(axisLabelsAngle));
+    }
 
     public String getXAxisTitle() {
         return parseString(settings.get( getSettingPath( DisplayerAttributeDef.XAXIS_TITLE ) ));
@@ -584,5 +622,21 @@ public class DisplayerSettings {
 
     public void setChart3D( boolean barchartThreeDimension ) {
         settings.put( getSettingPath( DisplayerAttributeDef.CHART_3D ), Boolean.toString( barchartThreeDimension ) );
+    }
+
+    public void setHtmlTemplate(String htmlTemplate) {
+        settings.put( getSettingPath( DisplayerAttributeDef.HTML_TEMPLATE ), htmlTemplate );
+    }
+
+    public void setJsTemplate(String jsTemplate) {
+        settings.put( getSettingPath( DisplayerAttributeDef.JS_TEMPLATE), jsTemplate );
+    }
+
+    public String getHtmlTemplate() {
+        return parseString(settings.get( getSettingPath( DisplayerAttributeDef.HTML_TEMPLATE ) ));
+    }
+
+    public String getJsTemplate() {
+        return parseString(settings.get( getSettingPath( DisplayerAttributeDef.JS_TEMPLATE) ));
     }
 }

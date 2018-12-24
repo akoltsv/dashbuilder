@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
@@ -57,7 +58,7 @@ import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.client.mvp.UberView;
 
-import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull;
+import static org.kie.soup.commons.validation.PortablePreconditions.checkNotNull;
 
 @Dependent
 public class DataSetLookupEditor implements IsWidget {
@@ -68,9 +69,10 @@ public class DataSetLookupEditor implements IsWidget {
 
         void clearDataSetSelector();
 
-        void setDataSetSelectorHintEnabled(boolean enabled);
+        void enableDataSetSelectorHint();
 
-        void addDataSetItem(String name, String id);
+        void addDataSetItem(String name,
+                            String id);
 
         void removeDataSetItem(int index);
 
@@ -92,7 +94,7 @@ public class DataSetLookupEditor implements IsWidget {
 
         void setGroupColumnSelectorTitle(String title);
 
-        void setGroupColumnSelectorHintEnabled(boolean enabled);
+        void enableGroupColumnSelectorHint();
 
         void addGroupColumnItem(String column);
 
@@ -114,6 +116,7 @@ public class DataSetLookupEditor implements IsWidget {
     }
 
     public interface DataSetDefFilter {
+
         boolean accept(DataSetDef def);
     }
 
@@ -154,7 +157,8 @@ public class DataSetLookupEditor implements IsWidget {
         view.init(this);
     }
 
-    public void init(DataSetLookupConstraints lookupConstraints, final DataSetLookup dataSetLookup) {
+    public void init(DataSetLookupConstraints lookupConstraints,
+                     final DataSetLookup dataSetLookup) {
         this.dataSetLookup = dataSetLookup;
         this.lookupConstraints = lookupConstraints;
         this.view.clearAll();
@@ -162,34 +166,37 @@ public class DataSetLookupEditor implements IsWidget {
             public void callback(List<DataSetDef> dataSetDefs) {
                 showDataSetDefs(dataSetDefs);
                 if (dataSetLookup != null && dataSetLookup.getDataSetUUID() != null) {
-                    fetchMetadata(dataSetLookup.getDataSetUUID(), new RemoteCallback<DataSetMetadata>() {
-                        public void callback(DataSetMetadata metadata) {
-                            updateDataSetLookup();
-                        }
-                    });
+                    fetchMetadata(dataSetLookup.getDataSetUUID(),
+                                  new RemoteCallback<DataSetMetadata>() {
+                                      public void callback(DataSetMetadata metadata) {
+                                          updateDataSetLookup();
+                                      }
+                                  });
                 }
             }
         });
     }
 
-    void fetchMetadata(final String uuid, final RemoteCallback<DataSetMetadata> callback) {
+    void fetchMetadata(final String uuid,
+                       final RemoteCallback<DataSetMetadata> callback) {
         try {
-            clientServices.fetchMetadata(uuid, new DataSetMetadataCallback() {
+            clientServices.fetchMetadata(uuid,
+                                         new DataSetMetadataCallback() {
 
-                public void callback(DataSetMetadata metadata) {
-                    dataSetMetadata = metadata;
-                    callback.callback(metadata);
-                }
+                                             public void callback(DataSetMetadata metadata) {
+                                                 dataSetMetadata = metadata;
+                                                 callback.callback(metadata);
+                                             }
 
-                public void notFound() {
-                    view.errorDataSetNotFound(uuid);
-                }
+                                             public void notFound() {
+                                                 view.errorDataSetNotFound(uuid);
+                                             }
 
-                public boolean onError(ClientRuntimeError error) {
-                    view.error(error);
-                    return false;
-                }
-            });
+                                             public boolean onError(ClientRuntimeError error) {
+                                                 view.error(error);
+                                                 return false;
+                                             }
+                                         });
         } catch (Exception e) {
             view.error(new ClientRuntimeError(e));
         }
@@ -291,7 +298,7 @@ public class DataSetLookupEditor implements IsWidget {
 
     public List<Integer> getAvailableGroupColumnIdxs() {
         List<Integer> result = new ArrayList<Integer>();
-        for (int i=0; i<dataSetMetadata.getNumberOfColumns(); i++) {
+        for (int i = 0; i < dataSetMetadata.getNumberOfColumns(); i++) {
             ColumnType columnType = dataSetMetadata.getColumnType(i);
             if (ColumnType.LABEL.equals(columnType) || ColumnType.DATE.equals(columnType)) {
                 result.add(i);
@@ -304,10 +311,12 @@ public class DataSetLookupEditor implements IsWidget {
         _dataSetDefList.clear();
         view.clearDataSetSelector();
         String selectedUUID = getDataSetUUID();
-        view.setDataSetSelectorHintEnabled(StringUtils.isBlank(selectedUUID));
+        if (StringUtils.isBlank(selectedUUID)) {
+            view.enableDataSetSelectorHint();
+        }
 
         boolean found = false;
-        for (int i=0; i<ds.size(); i++) {
+        for (int i = 0; i < ds.size(); i++) {
             DataSetDef def = ds.get(i);
             if (dataSetDefFilter.accept(def)) {
 
@@ -327,9 +336,11 @@ public class DataSetLookupEditor implements IsWidget {
     public void addDataSetDef(DataSetDef def) {
         _dataSetDefList.add(def);
         if (StringUtils.isBlank(def.getName())) {
-            view.addDataSetItem(def.getUUID(), def.getUUID());
+            view.addDataSetItem(def.getUUID(),
+                                def.getUUID());
         } else {
-            view.addDataSetItem(def.getName(), def.getUUID());
+            view.addDataSetItem(def.getName(),
+                                def.getUUID());
         }
     }
 
@@ -359,8 +370,9 @@ public class DataSetLookupEditor implements IsWidget {
     }
 
     void updateFilterControls() {
-        view.setFilterEnabled(true);
-        filterEditor.init(dataSetLookup.getFirstFilterOp(), dataSetMetadata);
+        view.setFilterEnabled(lookupConstraints.isFilterAllowed());
+        filterEditor.init(dataSetLookup.getFirstFilterOp(),
+                          dataSetMetadata);
     }
 
     void updateGroupControls() {
@@ -393,7 +405,9 @@ public class DataSetLookupEditor implements IsWidget {
             }
 
             view.clearGroupColumnSelector();
-            view.setGroupColumnSelectorHintEnabled(!lookupConstraints.isGroupRequired());
+            if (!lookupConstraints.isGroupRequired()) {
+                view.enableGroupColumnSelectorHint();
+            }
             for (int i = 0; i < groupColumnIdxs.size(); i++) {
                 int idx = groupColumnIdxs.get(i);
                 String columnId = getColumnId(idx);
@@ -434,7 +448,7 @@ public class DataSetLookupEditor implements IsWidget {
         _editorsMap.clear();
         ColumnType lastTargetType = null;
         ColumnType[] targetTypes = lookupConstraints.getColumnTypes(groupFunctions.size());
-        for (int i=0; i<groupFunctions.size(); i++) {
+        for (int i = 0; i < groupFunctions.size(); i++) {
             final int columnIdx = i;
             final GroupFunction groupFunction = groupFunctions.get(columnIdx);
 
@@ -446,7 +460,7 @@ public class DataSetLookupEditor implements IsWidget {
             }
 
             ColumnType columnType = null;
-            if (targetTypes != null && i<targetTypes.length) {
+            if (targetTypes != null && i < targetTypes.length) {
                 columnType = targetTypes[columnIdx];
             }
             if (columnType == null) {
@@ -455,14 +469,21 @@ public class DataSetLookupEditor implements IsWidget {
 
             String columnTitle = lookupConstraints.getColumnTitle(columnIdx);
             ColumnFunctionEditor columnEditor = beanManager.lookupBean(ColumnFunctionEditor.class).newInstance();
-            columnEditor.init(dataSetMetadata, groupFunction, columnType, columnTitle, functionsEnabled, canDelete);
+            columnEditor.init(dataSetMetadata,
+                              groupFunction,
+                              columnType,
+                              columnTitle,
+                              functionsEnabled,
+                              canDelete);
 
-            _editorsMap.put(_editorsMap.size(), columnEditor);
+            _editorsMap.put(_editorsMap.size(),
+                            columnEditor);
             view.addColumnEditor(columnEditor);
         }
     }
 
-    int getGroupFunctionLastIdx(List<GroupFunction> groupFunctions, String sourceId) {
+    int getGroupFunctionLastIdx(List<GroupFunction> groupFunctions,
+                                String sourceId) {
         int last = -1;
         for (GroupFunction gf : groupFunctions) {
             if (gf.getSourceId().equals(sourceId)) {
@@ -494,14 +515,15 @@ public class DataSetLookupEditor implements IsWidget {
         String selectedUUID = view.getSelectedDataSetId();
         for (DataSetDef dataSetDef : _dataSetDefList) {
             if (dataSetDef.getUUID().equals(selectedUUID)) {
-                fetchMetadata(selectedUUID, new RemoteCallback<DataSetMetadata>() {
+                fetchMetadata(selectedUUID,
+                              new RemoteCallback<DataSetMetadata>() {
 
-                    public void callback(DataSetMetadata metadata) {
-                        dataSetLookup = lookupConstraints.newDataSetLookup(metadata);
-                        updateDataSetLookup();
-                        changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
-                    }
-                });
+                                  public void callback(DataSetMetadata metadata) {
+                                      dataSetLookup = lookupConstraints.newDataSetLookup(metadata);
+                                      updateDataSetLookup();
+                                      changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
+                                  }
+                              });
             }
         }
     }
@@ -526,14 +548,17 @@ public class DataSetLookupEditor implements IsWidget {
             }
             // Group column change
             else {
-                groupOp.setColumnGroup(new ColumnGroup(columnId, columnId));
+                groupOp.setColumnGroup(new ColumnGroup(columnId,
+                                                       columnId));
                 if (lookupConstraints.isGroupColumn()) {
                     if (groupOp.getGroupFunctions().size() > 1) {
                         groupOp.getGroupFunctions().remove(0);
                     }
-                    GroupFunction groupFunction = new GroupFunction(columnId, columnId, null);
-                    groupOp.getGroupFunctions().add(0, groupFunction);
-
+                    GroupFunction groupFunction = new GroupFunction(columnId,
+                                                                    columnId,
+                                                                    null);
+                    groupOp.getGroupFunctions().add(0,
+                                                    groupFunction);
                 }
             }
         }
@@ -560,7 +585,8 @@ public class DataSetLookupEditor implements IsWidget {
             GroupFunction last = functionList.get(functionList.size() - 1);
 
             GroupFunction clone = last.cloneInstance();
-            String newColumnId = lookupConstraints.buildUniqueColumnId(dataSetLookup, clone);
+            String newColumnId = lookupConstraints.buildUniqueColumnId(dataSetLookup,
+                                                                       clone);
             clone.setColumnId(newColumnId);
             functionList.add(clone);
 
@@ -575,7 +601,8 @@ public class DataSetLookupEditor implements IsWidget {
         DataSetFilter filterOp = event.getFilter();
         dataSetLookup.removeOperations(DataSetOpType.FILTER);
         if (filterOp != null) {
-            dataSetLookup.addOperation(0, filterOp);
+            dataSetLookup.addOperation(0,
+                                       filterOp);
         }
         changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
     }
@@ -596,7 +623,8 @@ public class DataSetLookupEditor implements IsWidget {
 
     void onColumnFunctionChanged(@Observes GroupFunctionChangedEvent event) {
         GroupFunction gf = event.getGroupFunction();
-        String newColumnId = lookupConstraints.buildUniqueColumnId(dataSetLookup, gf);
+        String newColumnId = lookupConstraints.buildUniqueColumnId(dataSetLookup,
+                                                                   gf);
         gf.setColumnId(newColumnId);
         changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
     }
@@ -618,19 +646,22 @@ public class DataSetLookupEditor implements IsWidget {
     // Listen to data set lifecycle events
 
     void onDataSetDefRegisteredEvent(@Observes DataSetDefRegisteredEvent event) {
-        checkNotNull("event", event);
+        checkNotNull("event",
+                     event);
         addDataSetDef(event.getDataSetDef());
     }
 
     void onDataSetDefModifiedEvent(@Observes DataSetDefModifiedEvent event) {
-        checkNotNull("event", event);
+        checkNotNull("event",
+                     event);
 
         removeDataSetDef(event.getOldDataSetDef());
         addDataSetDef(event.getNewDataSetDef());
     }
 
     void onDataSetDefRemovedEvent(@Observes DataSetDefRemovedEvent event) {
-        checkNotNull("event", event);
+        checkNotNull("event",
+                     event);
 
         removeDataSetDef(event.getDataSetDef());
     }

@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.dashbuilder</groupId>
     <artifactId>dashbuilder-parent</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -19,6 +19,7 @@
   <properties>
     <!-- Add the absolute path for $JBOSS_HOME below to manage another instance -->
     <errai.jboss.home>${project.build.directory}/wildfly-${version.org.wildfly.gwt.sdm}</errai.jboss.home>
+    <gwt.compiler.skip>false</gwt.compiler.skip>
     <gwt.compiler.localWorkers>4</gwt.compiler.localWorkers>
   </properties>
 
@@ -35,19 +36,19 @@
       <artifactId>jboss-annotations-api_1.2_spec</artifactId>
       <scope>provided</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jboss.spec.javax.servlet</groupId>
       <artifactId>jboss-servlet-api_3.1_spec</artifactId>
       <scope>provided</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jboss.spec.javax.servlet.jsp</groupId>
       <artifactId>jboss-jsp-api_2.3_spec</artifactId>
       <scope>provided</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jboss.spec.javax.xml.bind</groupId>
       <artifactId>jboss-jaxb-api_2.2_spec</artifactId>
@@ -78,8 +79,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.dashbuilder</groupId>
-      <artifactId>dashbuilder-dataset-api</artifactId>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-dataset-api</artifactId>
     </dependency>
 
     <dependency>
@@ -153,6 +154,28 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-navigation-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-services-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-navigation-client</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-cms-client</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- UberFire -->
 
     <dependency>
@@ -163,6 +186,11 @@
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-commons</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-commons</artifactId>
     </dependency>
 
     <dependency>
@@ -201,7 +229,7 @@
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-backend-api</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-backend-server</artifactId>
@@ -233,7 +261,7 @@
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-runtime-plugins-api</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-runtime-plugins-client</artifactId>
@@ -263,25 +291,14 @@
 
     <dependency>
       <groupId>org.uberfire</groupId>
-      <artifactId>uberfire-apps-client</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.uberfire</groupId>
-      <artifactId>uberfire-apps-backend</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.uberfire</groupId>
       <artifactId>uberfire-widgets-service-api</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-widgets-properties-editor-api</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-widgets-properties-editor-client</artifactId>
@@ -305,9 +322,35 @@
       <scope>provided</scope>
     </dependency>
 
-        <dependency>
+    <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-widgets-table</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-simple-docks-client</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- UberFire Preferences. -->
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-preferences-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-preferences-backend</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-preferences-ui-client</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-preferences-client</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -378,11 +421,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <scope>provided</scope>
     </dependency>
 
     <!-- Errai -->
@@ -457,6 +495,38 @@
       <groupId>org.jboss.errai</groupId>
       <artifactId>errai-codegen-gwt</artifactId>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.errai</groupId>
+      <artifactId>errai-validation</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <classifier>sources</classifier>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <scope>provided</scope>
+      <classifier>sources</classifier>
     </dependency>
 
     <!-- Container provided dependencies -->
@@ -540,6 +610,12 @@
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-user</artifactId>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -575,13 +651,13 @@
           <compileSourcesArtifacts>
 
             <!-- Dashbuilder -->
-            <compileSourcesArtifact>org.dashbuilder:dashbuilder-json</compileSourcesArtifact>
+            <compileSourcesArtifact>org.kie.soup:kie-soup-json</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-widgets</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-validations</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-common-client</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-services-api</compileSourcesArtifact>
-            <compileSourcesArtifact>org.dashbuilder:dashbuilder-dataset-api</compileSourcesArtifact>
-            <compileSourcesArtifact>org.dashbuilder:dashbuilder-dataset-shared</compileSourcesArtifact>
+            <compileSourcesArtifact>org.kie.soup:kie-soup-dataset-api</compileSourcesArtifact>
+            <compileSourcesArtifact>org.kie.soup:kie-soup-dataset-shared</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-dataset-client</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-displayer-api</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-displayer-client</compileSourcesArtifact>
@@ -592,6 +668,9 @@
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-renderer-google</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-renderer-chartjs</compileSourcesArtifact>
             <compileSourcesArtifact>org.dashbuilder:dashbuilder-renderer-lienzo</compileSourcesArtifact>
+            <compileSourcesArtifact>org.dashbuilder:dashbuilder-navigation-api</compileSourcesArtifact>
+            <compileSourcesArtifact>org.dashbuilder:dashbuilder-navigation-client</compileSourcesArtifact>
+            <compileSourcesArtifact>org.dashbuilder:dashbuilder-cms-client</compileSourcesArtifact>
 
             <!-- Uberfire ext -->
             <compileSourcesArtifact>org.uberfire:uberfire-runtime-plugins-api</compileSourcesArtifact>
@@ -600,13 +679,17 @@
             <compileSourcesArtifact>org.uberfire:uberfire-layout-editor-client</compileSourcesArtifact>
             <compileSourcesArtifact>org.uberfire:uberfire-commons-editor-api</compileSourcesArtifact>
             <compileSourcesArtifact>org.uberfire:uberfire-commons-editor-client</compileSourcesArtifact>
-            <compileSourcesArtifact>org.uberfire:uberfire-apps-api</compileSourcesArtifact>
-            <compileSourcesArtifact>org.uberfire:uberfire-apps-client</compileSourcesArtifact>
             <compileSourcesArtifact>org.uberfire:uberfire-widgets-service-api</compileSourcesArtifact>
             <compileSourcesArtifact>org.uberfire:uberfire-widgets-commons</compileSourcesArtifact>
-             <compileSourcesArtifact>org.uberfire:uberfire-widgets-table</compileSourcesArtifact>
+            <compileSourcesArtifact>org.uberfire:uberfire-widgets-table</compileSourcesArtifact>
             <compileSourcesArtifact>org.uberfire:uberfire-widgets-properties-editor-api</compileSourcesArtifact>
             <compileSourcesArtifact>org.uberfire:uberfire-widgets-properties-editor-client</compileSourcesArtifact>
+            <compileSourcesArtifact>org.uberfire:uberfire-simple-docks-client</compileSourcesArtifact>
+            <compileSourcesArtifact>org.uberfire:uberfire-preferences-api</compileSourcesArtifact>
+            <compileSourcesArtifact>org.uberfire:uberfire-preferences-client</compileSourcesArtifact>
+            <compileSourcesArtifact>org.uberfire:uberfire-preferences-ui-client</compileSourcesArtifact>
+
+            <compileSourcesArtifact>org.kie.soup:kie-soup-commons</compileSourcesArtifact>
 
             <!-- UberFire -->
             <compileSourcesArtifact>org.uberfire:uberfire-commons</compileSourcesArtifact>
@@ -672,10 +755,14 @@
             <fileset>
               <directory>${basedir}</directory>
               <includes>
-                <include>.errai/**</include>
+                <include>src/main/webapp/org.dashbuilder.DashbuilderShowcase/</include>
+                <include>src/main/webapp/WEB-INF/classes/</include>
+                <include>src/main/webapp/WEB-INF/deploy/</include>
+                <include>src/main/webapp/WEB-INF/lib/</include>
+                <include>**/gwt-unitCache/**</include>
+                <include>.errai/</include>
                 <include>.niogit/**</include>
-                <include>src/main/webapp/WEB-INF/classes/**</include>
-                <include>src/main/webapp/WEB-INF/lib/**</include>
+                <include>.index/**</include>
               </includes>
             </fileset>
           </filesets>
@@ -703,6 +790,7 @@
                   <outputDirectory>${project.build.directory}</outputDirectory>
                 </artifactItem>
               </artifactItems>
+              <skip>${gwt.compiler.skip}</skip>
             </configuration>
           </execution>
         </executions>

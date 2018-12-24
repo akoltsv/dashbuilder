@@ -2,7 +2,8 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
              xmlns:g="urn:import:com.google.gwt.user.client.ui"
              xmlns:b="urn:import:org.gwtbootstrap3.client.ui"
-             xmlns:editor="urn:import:org.dashbuilder.common.client.editor">
+             xmlns:editor="urn:import:org.dashbuilder.common.client.editor"
+             xmlns:ddwn="urn:import:org.dashbuilder.common.client.editor.list">
 
   <ui:with field="i18n" type="org.dashbuilder.client.widgets.resources.i18n.DataSetEditorConstants"/>
 
@@ -17,6 +18,10 @@
     .row {
       margin-bottom: 5px;
     }
+    .attr {
+      float: left;
+      margin-right: 5px;
+    }
   </ui:style>
 
   <b:Container fluid="true">
@@ -24,21 +29,23 @@
     <!-- dataSource. -->
     <b:Row addStyleNames="{style.row}">
       <b:Column size="MD_3">
-        <g:HTML text="{i18n.sql_datasource}"/>
+        <g:HTML text="{i18n.sql_datasource}" addStyleNames="{style.attr}"/>
+        <b:Tooltip isAnimated="true" placement="BOTTOM" title="{i18n.sql_datasource_description}">
+          <b:Icon type="QUESTION_CIRCLE" />
+        </b:Tooltip>
       </b:Column>
       <b:Column size="MD_9">
-        <editor:ValueBoxEditor.View ui:field="dataSource">
-          <editor:valuebox>
-            <b:TextBox placeholder="{i18n.sql_datasource_placeHolder}"/>
-          </editor:valuebox>
-        </editor:ValueBoxEditor.View>
+        <ddwn:DropDownEditor.View ui:field="dataSource" />
       </b:Column>
     </b:Row>
 
     <!-- dbSchema. -->
     <b:Row addStyleNames="{style.row}">
       <b:Column size="MD_3">
-        <g:HTML text="{i18n.sql_schema}"/>
+        <g:HTML text="{i18n.sql_schema}" addStyleNames="{style.attr}"/>
+        <b:Tooltip isAnimated="true" placement="BOTTOM" title="{i18n.sql_schema_description}">
+          <b:Icon type="QUESTION_CIRCLE" />
+        </b:Tooltip>
       </b:Column>
       <b:Column size="MD_9">
         <editor:ValueBoxEditor.View ui:field="dbSchema">
@@ -52,7 +59,10 @@
     <!-- Source selector (table or query). -->
     <b:Row addStyleNames="{style.row}">
       <b:Column size="MD_3">
-        <g:HTML text="{i18n.sql_source}"/>
+        <g:HTML text="{i18n.sql_source}" addStyleNames="{style.attr}"/>
+        <b:Tooltip isAnimated="true" placement="BOTTOM" title="{i18n.sql_source_description}">
+          <b:Icon type="QUESTION_CIRCLE" />
+        </b:Tooltip>
       </b:Column>
       <b:Column size="MD_9">
         <g:FlowPanel>

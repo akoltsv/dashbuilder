@@ -30,6 +30,11 @@ public abstract class AbstractDisplayerListener implements DisplayerListener {
 
     }
 
+    @Override
+    public void onDataLoaded(Displayer displayer) {
+
+    }
+
     @Override public void onDraw(Displayer displayer) {
 
     }
@@ -47,6 +52,10 @@ public abstract class AbstractDisplayerListener implements DisplayerListener {
     }
 
     @Override public void onFilterEnabled(Displayer displayer, DataSetFilter filter) {
+
+    }
+
+    @Override public void onFilterUpdate(Displayer displayer, DataSetFilter oldFilter, DataSetFilter newFilter) {
 
     }
 

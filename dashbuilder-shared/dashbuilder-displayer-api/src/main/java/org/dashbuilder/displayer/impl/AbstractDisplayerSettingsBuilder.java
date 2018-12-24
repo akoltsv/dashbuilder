@@ -24,6 +24,7 @@ import org.dashbuilder.dataset.group.GroupFunction;
 import org.dashbuilder.dataset.impl.AbstractDataSetLookupBuilder;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.DisplayerSettingsBuilder;
+import org.dashbuilder.displayer.DisplayerSubType;
 
 /**
  * Base class for DisplayerSettingsBuilder implementations.
@@ -75,6 +76,11 @@ public abstract class AbstractDisplayerSettingsBuilder<T> extends AbstractDataSe
         return (T) this;
     }
 
+    public T xAxisAngle(int angle) {
+        displayerSettings.setXAxisLabelsAngle(angle);
+        return (T) this;
+    }
+
     public T yAxisTitle(String title) {
         displayerSettings.setYAxisShowLabels(true);
         displayerSettings.setYAxisTitle(title);
@@ -83,6 +89,12 @@ public abstract class AbstractDisplayerSettingsBuilder<T> extends AbstractDataSe
 
     public T renderer(String renderer) {
         displayerSettings.setRenderer(renderer);
+        return (T) this;
+    }
+
+    @Override
+    public T subtype(DisplayerSubType displayerSubType) {
+        displayerSettings.setSubtype(displayerSubType);
         return (T) this;
     }
 
@@ -157,6 +169,16 @@ public abstract class AbstractDisplayerSettingsBuilder<T> extends AbstractDataSe
 
     public T expression(String columnId, String expression) {
         displayerSettings.setColumnValueExpression(columnId, expression);
+        return (T) this;
+    }
+
+    public T htmlTemplate(String html) {
+        displayerSettings.setHtmlTemplate(html);
+        return (T) this;
+    }
+
+    public T jsTemplate(String onDrawJs) {
+        displayerSettings.setJsTemplate(onDrawJs);
         return (T) this;
     }
 

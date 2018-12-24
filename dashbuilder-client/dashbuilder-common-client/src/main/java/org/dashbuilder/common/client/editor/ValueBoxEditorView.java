@@ -1,5 +1,7 @@
 package org.dashbuilder.common.client.editor;
 
+import javax.enterprise.context.Dependent;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.editor.client.Editor;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -12,11 +14,8 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.ValueBoxBase;
 import com.google.gwt.user.client.ui.Widget;
-import org.gwtbootstrap3.client.ui.Popover;
 import org.gwtbootstrap3.client.ui.Tooltip;
 import org.gwtbootstrap3.client.ui.constants.Placement;
-
-import javax.enterprise.context.Dependent;
 
 /**
  * <p>The ValueBoxEditor view.</p>
@@ -74,7 +73,6 @@ public class ValueBoxEditorView<T> extends Composite implements ValueBoxEditor.V
     public ValueBoxEditor.View<T> showError(SafeHtml message) {
         contents.addStyleName(STYLE_ERROR);
         errorTooltip.setTitle(message.asString());
-        errorTooltip.reconfigure();
         return this;
     }
 
@@ -82,18 +80,16 @@ public class ValueBoxEditorView<T> extends Composite implements ValueBoxEditor.V
     public ValueBoxEditor.View<T> clearError() {
         contents.removeStyleName(STYLE_ERROR);
         errorTooltip.setTitle("");
-        errorTooltip.reconfigure();
         return this;
     }
 
     public ValueBoxEditor.View<T> addHelpContent(final String title, final String content, final Placement placement) {
-        final Popover popover = new Popover(widget);
-        popover.setContainer("body");
-        popover.setShowDelayMs(1000);
-        popover.setPlacement(placement);
-        popover.setTitle(title);
-        popover.setContent(content);
-        contents.add(popover);
+        final Tooltip tooltip = new Tooltip(widget);
+        tooltip.setContainer("body");
+        tooltip.setShowDelayMs(1000);
+        tooltip.setPlacement(placement);
+        tooltip.setTitle(content);
+        contents.add(tooltip);
         return this;
     }
 

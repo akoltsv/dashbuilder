@@ -21,7 +21,7 @@ import com.google.gwt.i18n.client.Messages;
 
 public interface CommonConstants extends Messages {
 
-    public static final CommonConstants INSTANCE = GWT.create( CommonConstants.class );
+    CommonConstants INSTANCE = GWT.create( CommonConstants.class );
 
     String ok();
 
@@ -50,6 +50,8 @@ public interface CommonConstants extends Messages {
     String common_title();
 
     String common_title_placeholder();
+
+    String common_export();
 
     String common_allowCSV();
 
@@ -119,6 +121,8 @@ public interface CommonConstants extends Messages {
 
     String table_descSortOrder();
 
+    String table_columnPicker();
+
     String axis_group();
 
     String xaxis_showLabels();
@@ -156,6 +160,14 @@ public interface CommonConstants extends Messages {
     String filter_listening();
 
     String filter_notifications();
+
+    String selector_group();
+
+    String selector_width();
+
+    String selector_multiple();
+
+    String selector_show_inputs();
 
     String filter_editor_selectcolumn();
 

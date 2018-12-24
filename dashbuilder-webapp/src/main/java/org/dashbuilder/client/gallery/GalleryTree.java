@@ -27,6 +27,7 @@ import org.dashbuilder.client.resources.i18n.AppConstants;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.DisplayerSettingsFactory;
 import org.dashbuilder.dataset.DataSetFactory;
+import org.dashbuilder.displayer.DisplayerSubType;
 import org.dashbuilder.displayer.json.DisplayerSettingsJSONMarshaller;
 import org.dashbuilder.renderer.client.DefaultRenderer;
 import org.uberfire.mvp.PlaceRequest;
@@ -63,6 +64,7 @@ public class GalleryTree {
         initMeterChartCategory();
         initMetricCategory();
         initMapChartCategory();
+        initSelectorCategory();
         initDashboardCategory();
     }
 
@@ -423,7 +425,7 @@ public class GalleryTree {
                         .dataset(SALES_OPPS)
                         .filter(CLOSING_DATE, timeFrame("begin[quarter February] till now"))
                         .column(AMOUNT, SUM).expression("value/1000").format(AppConstants.INSTANCE.gallerytree_metrics_basic_column1(), "$ #,### K")
-                        .width(300).height(200)
+                        .width(300).height(150)
                         .margins(50, 50, 50, 50)
                         .backgroundColor("FDE8D4")
                         .filterOn(false, false, true)
@@ -435,7 +437,7 @@ public class GalleryTree {
                         .title(AppConstants.INSTANCE.gallerytree_metrics_basic_static_title())
                         .titleVisible(true)
                         .column("tweets").format(AppConstants.INSTANCE.gallerytree_metrics_basic_static_column1(), "#,###")
-                        .width(300).height(200)
+                        .width(300).height(150)
                         .margins(50, 50, 50, 50)
                         .backgroundColor("ADE8D4")
                         .filterOff(true)
@@ -558,6 +560,57 @@ public class GalleryTree {
                         .tableOrderDefault(AMOUNT, DESCENDING)
                         .filterOn(true, true, true)
                         .renderer(DefaultRenderer.UUID)
+                        .buildSettings()
+        )));
+    }
+
+    private void initSelectorCategory() {
+        GalleryTreeNodeList nodeList = new GalleryTreeNodeList(AppConstants.INSTANCE.gallerytree_selector());
+        mainNodes.add(nodeList);
+
+        nodeList.add(new GalleryPlaceRequest(AppConstants.INSTANCE.gallerytree_selector_dropdown(), createPlaceRequest(
+                DisplayerSettingsFactory.newSelectorSettings()
+                        .dataset(SALES_OPPS)
+                        .group(COUNTRY)
+                        .column(COUNTRY, "Country")
+                        .column(COUNT, "#Opps").format("#Opps", "#,###")
+                        .column(AMOUNT, SUM).format(AppConstants.INSTANCE.sales_bydate_selector_total(), "$ #,##0.00")
+                        .sort(COUNTRY, ASCENDING)
+                        .title(AppConstants.INSTANCE.gallerytree_selector_dropdown()).titleVisible(true)
+                        .subtype(DisplayerSubType.SELECTOR_DROPDOWN)
+                        .width(200)
+                        .margins(20, 0, 20, 0)
+                        .multiple(true)
+                        .filterOn(false, true, true)
+                        .buildSettings()
+        )));
+
+        nodeList.add(new GalleryPlaceRequest(AppConstants.INSTANCE.gallerytree_selector_labels(), createPlaceRequest(
+                DisplayerSettingsFactory.newSelectorSettings()
+                        .dataset(SALES_OPPS)
+                        .group(COUNTRY)
+                        .column(COUNTRY, "Country")
+                        .column(COUNT, "#Opps").format("#Opps", "#,###")
+                        .column(AMOUNT, SUM).format(AppConstants.INSTANCE.sales_bydate_selector_total(), "$ #,##0.00")
+                        .sort(COUNTRY, ASCENDING)
+                        .title(AppConstants.INSTANCE.gallerytree_selector_labels()).titleVisible(true)
+                        .subtype(DisplayerSubType.SELECTOR_LABELS)
+                        .width(-1)
+                        .margins(20, 0, 20, 0)
+                        .multiple(true)
+                        .filterOn(false, true, true)
+                        .buildSettings()
+        )));
+
+        nodeList.add(new GalleryPlaceRequest(AppConstants.INSTANCE.gallerytree_selector_slider(), createPlaceRequest(
+                DisplayerSettingsFactory.newSelectorSettings()
+                        .dataset(SALES_OPPS)
+                        .title(AppConstants.INSTANCE.gallerytree_selector_slider()).titleVisible(true)
+                        .subtype(DisplayerSubType.SELECTOR_SLIDER)
+                        .column(CREATION_DATE).format("Creation date", "dd MMM, yyyy")
+                        .margins(20, 0, 20, 0)
+                        .width(-1)
+                        .filterOn(false, true, true)
                         .buildSettings()
         )));
     }

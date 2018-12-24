@@ -15,13 +15,17 @@
 package org.dashbuilder.renderer.client.table;
 
 import org.dashbuilder.common.client.error.ClientRuntimeError;
+import org.dashbuilder.common.client.widgets.FilterLabel;
+import org.dashbuilder.common.client.widgets.FilterLabelSet;
 import org.dashbuilder.dataset.ColumnType;
+import org.dashbuilder.dataset.DataSet;
 import org.dashbuilder.dataset.filter.FilterFactory;
 import org.dashbuilder.dataset.sort.SortOrder;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.DisplayerSettingsFactory;
 import org.dashbuilder.displayer.client.AbstractDisplayerTest;
 import org.dashbuilder.displayer.client.DisplayerListener;
+import org.dashbuilder.displayer.client.formatter.ValueFormatter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -38,7 +42,7 @@ import static org.mockito.Mockito.*;
 public class TableDisplayerTest extends AbstractDisplayerTest {
 
     public TableDisplayer createTableDisplayer(DisplayerSettings settings) {
-        return initDisplayer(new TableDisplayer(mock(TableDisplayer.View.class)), settings);
+        return initDisplayer(new TableDisplayer(mock(TableDisplayer.View.class), mock(FilterLabelSet.class)), settings);
     }
 
     @Mock
@@ -46,6 +50,14 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
 
     @Mock
     Command selectCommand;
+
+    @Mock
+    FilterLabel filterLabel;
+
+    public void resetFilterLabelSet(FilterLabelSet filterLabelSet) {
+        reset(filterLabelSet);
+        doAnswer(invocationOnMock -> filterLabel).when(filterLabelSet).addLabel(anyString());
+    }
 
     @Test
     public void testTableDraw() {
@@ -57,22 +69,27 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
                 .tablePageSize(10)
                 .tableWidth(1000)
                 .filterOn(true, true, true)
+                .allowCsvExport(true)
+                .allowExcelExport(false)
                 .buildSettings();
 
         TableDisplayer table = createTableDisplayer(allRows);
         TableDisplayer.View tableView = table.getView();
+        FilterLabelSet filterLabelSet = table.getFilterLabelSet();
         table.draw();
 
         verify(tableView).setWidth(1000);
         verify(tableView).setSortEnabled(true);
         verify(tableView).setTotalRows(50);
-        verify(tableView).createTable(10);
+        verify(tableView).createTable(10, filterLabelSet);
         verify(tableView).addColumn(ColumnType.NUMBER, COLUMN_ID, COLUMN_ID, 0, false, true);
         verify(tableView).addColumn(ColumnType.LABEL, COLUMN_CITY, COLUMN_CITY, 1, true, true);
         verify(tableView).addColumn(ColumnType.LABEL, COLUMN_DEPARTMENT, COLUMN_DEPARTMENT, 2, true, true);
         verify(tableView).addColumn(ColumnType.LABEL, COLUMN_EMPLOYEE, COLUMN_EMPLOYEE, 3, true, true);
         verify(tableView).addColumn(ColumnType.DATE, COLUMN_DATE, COLUMN_DATE, 4, false, true);
         verify(tableView).addColumn(ColumnType.NUMBER, COLUMN_AMOUNT, COLUMN_AMOUNT, 5, false, true);
+        verify(tableView).setExportToCsvEnabled(true);
+        verify(tableView).setExportToXlsEnabled(false);
         verify(tableView).gotoFirstPage();
     }
 
@@ -87,9 +104,10 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
 
         TableDisplayer table = createTableDisplayer(allRows);
         TableDisplayer.View tableView = table.getView();
+        FilterLabelSet filterLabelSet = table.getFilterLabelSet();
         table.draw();
 
-        verify(tableView).createTable(10);
+        verify(tableView).createTable(10, filterLabelSet);
         verify(tableView).setTotalRows(0);
         verify(tableView).setPagerEnabled(false);
         verify(tableView, never()).setPagerEnabled(true);
@@ -147,17 +165,19 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
 
         TableDisplayer table = createTableDisplayer(allRows);
         TableDisplayer.View view = table.getView();
+        FilterLabelSet filterLabelSet = table.getFilterLabelSet();
         table.addListener(displayerListener);
-        table.setOnCellSelectedCommand(selectCommand);
+        table.addOnCellSelectedCommand(selectCommand);
         table.draw();
 
         reset(view);
         reset(displayerListener);
+        resetFilterLabelSet(filterLabelSet);
         table.selectCell(COLUMN_DEPARTMENT, 3);
 
         verify(selectCommand, never()).execute();
         verify(view, never()).gotoFirstPage();
-        verify(view, never()).addFilterValue(anyString());
+        verify(filterLabelSet, never()).addLabel(anyString());
         verify(displayerListener, never()).onRedraw(table);
         assertNull(table.getSelectedCellColumn());
         assertNull(table.getSelectedCellRow());
@@ -175,17 +195,19 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
 
         TableDisplayer table = createTableDisplayer(allRows);
         TableDisplayer.View view = table.getView();
+        FilterLabelSet filterLabelSet = table.getFilterLabelSet();
         table.addListener(displayerListener);
-        table.setOnCellSelectedCommand(selectCommand);
+        table.addOnCellSelectedCommand(selectCommand);
         table.draw();
 
         reset(view);
         reset(displayerListener);
+        resetFilterLabelSet(filterLabelSet);
         table.selectCell(COLUMN_DEPARTMENT, 3);
 
         verify(selectCommand).execute();
         verify(view, never()).gotoFirstPage();
-        verify(view).addFilterValue(anyString());
+        verify(filterLabelSet).addLabel(anyString());
         verify(displayerListener, never()).onRedraw(table);
         assertEquals(table.getSelectedCellColumn(), COLUMN_DEPARTMENT);
         assertEquals(table.getSelectedCellRow(), new Integer(3));
@@ -203,17 +225,19 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
 
         TableDisplayer table = createTableDisplayer(allRows);
         TableDisplayer.View view = table.getView();
+        FilterLabelSet filterLabelSet = table.getFilterLabelSet();
         table.addListener(displayerListener);
-        table.setOnCellSelectedCommand(selectCommand);
+        table.addOnCellSelectedCommand(selectCommand);
         table.draw();
 
         reset(view);
         reset(displayerListener);
+        resetFilterLabelSet(filterLabelSet);
         table.selectCell(COLUMN_DEPARTMENT, 3);
 
         verify(view, atLeastOnce()).gotoFirstPage();
         verify(view).redrawTable();
-        verify(view, atLeastOnce()).addFilterValue(anyString());
+        verify(filterLabelSet, atLeastOnce()).addLabel(anyString());
         verify(view).setTotalRows(11);
         verify(displayerListener).onRedraw(table);
         verify(selectCommand).execute();
@@ -233,22 +257,68 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
 
         TableDisplayer table = createTableDisplayer(allRows);
         TableDisplayer.View view = table.getView();
+        FilterLabelSet filterLabelSet = table.getFilterLabelSet();
         table.addListener(displayerListener);
-        table.setOnCellSelectedCommand(selectCommand);
+        table.addOnCellSelectedCommand(selectCommand);
         table.draw();
+        resetFilterLabelSet(filterLabelSet);
         table.selectCell(COLUMN_DEPARTMENT, 3);
 
         reset(view);
         reset(selectCommand);
         reset(displayerListener);
+        resetFilterLabelSet(filterLabelSet);
         table.selectCell(COLUMN_DEPARTMENT, 3);
 
         verify(selectCommand).execute();
         verify(view, never()).gotoFirstPage();
-        verify(view, never()).addFilterValue(anyString());
+        verify(filterLabelSet, never()).addLabel(anyString());
         verify(displayerListener, never()).onRedraw(table);
         assertNull(table.getSelectedCellColumn());
         assertNull(table.getSelectedCellRow());
+    }
+
+    @Test
+    public void testSelectCellCommands() {
+        DisplayerSettings allRows = DisplayerSettingsFactory.newTableSettings()
+                .dataset(EXPENSES)
+                .tablePageSize(5)
+                .tableOrderDefault(COLUMN_ID, SortOrder.DESCENDING)
+                .filterOn(false, true, true)
+                .buildSettings();
+
+        TableDisplayer table = createTableDisplayer(allRows);
+        TableDisplayer.View view = table.getView();
+        FilterLabelSet filterLabelSet = table.getFilterLabelSet();
+        table.addListener(displayerListener);
+        table.addOnCellSelectedCommand(selectCommand);
+        final Command selectedCommand = mock(Command.class);
+        table.addOnCellSelectedCommand(selectedCommand);
+        table.draw();
+        resetFilterLabelSet(filterLabelSet);
+        table.selectCell(COLUMN_DEPARTMENT, 3);
+
+        verify(selectCommand).execute();
+        verify(selectedCommand).execute();
+    }
+
+    @Test
+    public void testFormatEmpty() {
+        TableDisplayer table = createTableDisplayer(DisplayerSettingsFactory.newTableSettings()
+                .dataset(EXPENSES)
+                .buildSettings());
+
+        table.addFormatter(COLUMN_EMPLOYEE, new ValueFormatter() {
+            public String formatValue(DataSet dataSet, int row, int column) {
+                return "test";
+            }
+            public String formatValue(Object value) {
+                return "test";
+            }
+        });
+        table.draw();
+        String value = table.formatValue(100, 3);
+        assertEquals(value, "test");
     }
 
     @Test

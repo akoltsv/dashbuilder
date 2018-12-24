@@ -15,14 +15,17 @@
  */
 package org.dashbuilder.displayer.client;
 
+import java.util.Map;
+
 import org.dashbuilder.dataset.DataSet;
 import org.dashbuilder.dataset.DataSetLookup;
 import org.dashbuilder.dataset.client.DataSetReadyCallback;
 import org.dashbuilder.dataset.filter.DataSetFilter;
 import org.dashbuilder.dataset.group.DataSetGroup;
 import org.dashbuilder.dataset.group.Interval;
-import org.dashbuilder.dataset.sort.DataSetSort;
 import org.dashbuilder.dataset.sort.SortOrder;
+import org.dashbuilder.displayer.client.export.ExportCallback;
+import org.dashbuilder.displayer.client.export.ExportFormat;
 
 /**
  * Interface addressed to issue lookup requests over a data set instance.
@@ -146,4 +149,14 @@ public interface DataSetHandler {
      * Get the current data set lookup (if any)
      */
     DataSetLookup getCurrentDataSetLookup();
+
+    /**
+     * Export the current data set to a file in the specified output format.
+     *
+     * @param format The output format
+     * @param maxRows Max rows to be exported.
+     * @param callback The callback instance to be notified
+     * @param columnNameMap A map containing the column header names for every column in the data set lookup
+     */
+    void exportCurrentDataSetLookup(ExportFormat format, int maxRows, ExportCallback callback, Map<String,String> columnNameMap);
 }

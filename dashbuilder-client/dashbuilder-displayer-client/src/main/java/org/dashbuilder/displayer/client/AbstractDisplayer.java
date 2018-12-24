@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.common.client.StringUtils;
 import org.dashbuilder.common.client.error.ClientRuntimeError;
@@ -44,8 +45,9 @@ import org.dashbuilder.dataset.sort.SortOrder;
 import org.dashbuilder.displayer.ColumnSettings;
 import org.dashbuilder.displayer.DisplayerConstraints;
 import org.dashbuilder.displayer.DisplayerSettings;
+import org.dashbuilder.displayer.client.export.ExportCallback;
+import org.dashbuilder.displayer.client.export.ExportFormat;
 import org.dashbuilder.displayer.client.formatter.ValueFormatter;
-import org.uberfire.client.mvp.UberView;
 
 /**
  * Base class for implementing custom displayers.
@@ -57,7 +59,7 @@ import org.uberfire.client.mvp.UberView;
  */
 public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implements Displayer {
 
-    public interface View<P extends Displayer> extends UberView<P> {
+    public interface View extends IsWidget {
 
         void errorMissingSettings();
 
@@ -103,9 +105,9 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
     protected DataSetHandler dataSetHandler;
     protected DisplayerSettings displayerSettings;
     protected DisplayerConstraints displayerConstraints;
-    protected List<DisplayerListener> listenerList = new ArrayList<DisplayerListener>();
-    protected Map<String,List<Interval>> columnSelectionMap = new HashMap<String,List<Interval>>();
-    protected Map<String,ValueFormatter> formatterMap = new HashMap<String, ValueFormatter>();
+    protected List<DisplayerListener> listenerList = new ArrayList<>();
+    protected Map<String,List<Interval>> columnSelectionMap = new HashMap<>();
+    protected Map<String,ValueFormatter> formatterMap = new HashMap<>();
     protected Formatter formatter = null;
     protected ExpressionEval evaluator = null;
     protected DataSetFilter currentFilter = null;
@@ -176,7 +178,6 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
     public void setDataSetHandler(DataSetHandler dataSetHandler) {
         this.dataSetHandler = dataSetHandler;
     }
-
 
     public Formatter getFormatter() {
         if (formatter == null) {
@@ -249,6 +250,7 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
                     public void callback(DataSet result) {
                         try {
                             dataSet = result;
+                            afterLoad();
                             afterDataSetLookup(result);
                             createVisualization();
                             getView().showVisualization();
@@ -388,6 +390,12 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
         }
     }
 
+    protected void afterLoad() {
+        for (DisplayerListener listener : listenerList) {
+            listener.onDataLoaded(this);
+        }
+    }
+
     protected void afterDraw() {
         updateRefreshTimer();
         for (DisplayerListener listener : listenerList) {
@@ -435,6 +443,11 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
     }
 
     @Override
+    public void onDataLoaded(Displayer displayer) {
+        // Do nothing
+    }
+
+    @Override
     public void onDraw(Displayer displayer) {
         // Do nothing
     }
@@ -467,6 +480,17 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
     public void onFilterEnabled(Displayer displayer, DataSetFilter filter) {
         if (displayerSettings.isFilterListeningEnabled()) {
             if (dataSetHandler.filter(filter)) {
+                redraw();
+            }
+        }
+    }
+
+    @Override
+    public void onFilterUpdate(Displayer displayer, DataSetFilter oldFilter, DataSetFilter newFilter) {
+        if (displayerSettings.isFilterListeningEnabled()) {
+            boolean unfilter = dataSetHandler.unfilter(oldFilter);
+            boolean filter = dataSetHandler.filter(newFilter);
+            if (unfilter || filter) {
                 redraw();
             }
         }
@@ -513,8 +537,29 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
      */
     public List<Interval> filterIntervals(String columnId) {
         List<Interval> selected = columnSelectionMap.get(columnId);
-        if (selected == null) return new ArrayList<Interval>();
+        if (selected == null) {
+            return new ArrayList<>();
+        }
         return selected;
+    }
+
+    /**
+     * Get the current filter interval matching the specified index
+     *
+     * @param columnId The column identifier.
+     * @param idx The index of the interval
+     * @return The target interval matching the specified parameters or null if it does not exist.
+     */
+    public Interval filterInterval(String columnId, int idx) {
+        List<Interval> selected = columnSelectionMap.get(columnId);
+        if (selected != null && !selected.isEmpty()) {
+            for (Interval interval : selected) {
+                if (interval.getIndex() == idx) {
+                    return interval;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -524,10 +569,11 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
      * @return A list of interval indexes
      */
     public List<Integer> filterIndexes(String columnId) {
-        List<Integer> result = new ArrayList<Integer>();
+        List<Integer> result = new ArrayList<>();
         List<Interval> selected = columnSelectionMap.get(columnId);
-        if (selected == null) return result;
-
+        if (selected == null) {
+            return result;
+        }
         for (Interval interval : selected) {
             result.add(interval.getIndex());
         }
@@ -554,35 +600,41 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
     public void filterUpdate(String columnId, int row, Integer maxSelections) {
         if (displayerSettings.isFilterEnabled()) {
 
-            Interval intervalSelected = dataSetHandler.getInterval(columnId, row);
-            if (intervalSelected != null) {
+            List<Interval> selectedIntervals = columnSelectionMap.get(columnId);
+            Interval intervalFiltered = filterInterval(columnId, row);
 
-                List<Interval> selectedIntervals = columnSelectionMap.get(columnId);
-                if (selectedIntervals == null) {
-                    selectedIntervals = new ArrayList<Interval>();
+            // Existing interval reset
+            if (intervalFiltered != null) {
+                selectedIntervals.remove(intervalFiltered);
+                if (!selectedIntervals.isEmpty()) {
+                    filterApply(columnId, selectedIntervals);
+                }
+                else {
+                    filterReset(columnId);
+                }
+            }
+            // No current filter => Add the selected interval
+            else if (selectedIntervals == null) {
+                Interval intervalSelected = dataSetHandler.getInterval(columnId, row);
+                if (intervalSelected != null) {
+                    selectedIntervals = new ArrayList<>();
                     selectedIntervals.add(intervalSelected);
                     columnSelectionMap.put(columnId, selectedIntervals);
                     filterApply(columnId, selectedIntervals);
                 }
-                else if (selectedIntervals.contains(intervalSelected)) {
-                    selectedIntervals.remove(intervalSelected);
-                    if (!selectedIntervals.isEmpty()) {
-                        filterApply(columnId, selectedIntervals);
-                    }
-                    else {
-                        filterReset(columnId);
-                    }
-                }
-                else {
+            }
+            // Extra interval added to an already filtered column
+            else {
+                Interval intervalSelected = dataSetHandler.getInterval(columnId, row);
+                if (intervalSelected != null) {
                     if (displayerSettings.isFilterSelfApplyEnabled()) {
-                        selectedIntervals = new ArrayList<Interval>();
+                        selectedIntervals = new ArrayList<>();
                         columnSelectionMap.put(columnId, selectedIntervals);
                     }
                     selectedIntervals.add(intervalSelected);
                     if (maxSelections != null && maxSelections > 0 && selectedIntervals.size() >= maxSelections) {
                         filterReset(columnId);
-                    }
-                    else {
+                    } else {
                         filterApply(columnId, selectedIntervals);
                     }
                 }
@@ -635,6 +687,32 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
             }
             // Drill-down support
             if (displayerSettings.isFilterSelfApplyEnabled()) {
+                dataSetHandler.filter(filter);
+                redraw();
+            }
+        }
+    }
+
+    /**
+     * Updates the current filter values for the given data set column. Any previous filter is reset.
+     *
+     * @param filter A filter
+     */
+    public void filterUpdate(DataSetFilter filter) {
+        if (displayerSettings.isFilterEnabled()) {
+
+            DataSetFilter oldFilter = currentFilter;
+            this.currentFilter = filter;
+
+            // Notify to those interested parties the selection event.
+            if (displayerSettings.isFilterNotificationEnabled()) {
+                for (DisplayerListener listener : listenerList) {
+                    listener.onFilterUpdate(this, oldFilter, filter);
+                }
+            }
+            // Drill-down support
+            if (displayerSettings.isFilterSelfApplyEnabled()) {
+                dataSetHandler.unfilter(oldFilter);
                 dataSetHandler.filter(filter);
                 redraw();
             }
@@ -771,9 +849,8 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
     }
 
     public String formatValue(int row, int column) {
-        Object value = dataSet.getValueAt(row, column);
+        Object value = row < dataSet.getRowCount() ? dataSet.getValueAt(row, column) : null;
         DataColumn columnObj = dataSet.getColumnByIndex(column);
-
         ValueFormatter formatter = getFormatter(columnObj.getId());
         if (formatter != null) {
             return formatter.formatValue(dataSet, row, column);
@@ -873,5 +950,18 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
     protected Date parseDynamicGroupDate(DateIntervalType type, String date) {
         String pattern = DateIntervalPattern.getPattern(type);
         return getFormatter().parseDate(pattern, date);
+    }
+
+    // EXPORT
+
+    @Override
+    public void export(ExportFormat format, int maxRows, ExportCallback callback) {
+        if (dataSetHandler == null) {
+            callback.noData();
+        } else {
+            Map<String,String> columnNameMap = new HashMap<>();
+            displayerSettings.getColumnSettingsList().forEach(cs -> columnNameMap.put(cs.getColumnId(), cs.getColumnName()));
+            dataSetHandler.exportCurrentDataSetLookup(format, maxRows, callback, columnNameMap);
+        }
     }
 }

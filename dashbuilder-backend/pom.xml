@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.dashbuilder</groupId>
     <artifactId>dashbuilder-parent</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -15,12 +15,9 @@
   <name>Dashbuilder Backend</name>
 
   <modules>
-    <module>dashbuilder-dataset-core</module>
-    <module>dashbuilder-dataset-sql</module>
     <module>dashbuilder-dataset-sql-tests</module>
-    <module>dashbuilder-dataset-csv</module>
-    <module>dashbuilder-dataset-elasticsearch</module>
     <module>dashbuilder-dataset-cdi</module>
+    <module>dashbuilder-navigation-backend</module>
     <module>dashbuilder-services</module>
   </modules>
 

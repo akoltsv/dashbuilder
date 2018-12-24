@@ -133,21 +133,22 @@ public class DisplayerSettingsEditor implements IsWidget {
         return displayerSettings;
     }
 
-    public void init(DisplayerSettings displayerSettings) {
+    public void init(Displayer displayer) {
         try {
-            this.displayerSettings = displayerSettings;
-            this.displayer = displayerLocator.lookupDisplayer(displayerSettings);
+            this.displayer = displayer;
+            this.displayerSettings = displayer.getDisplayerSettings();
             this.displayerContraints = displayer.getDisplayerConstraints();
             this.supportedAttributes = displayerContraints.getSupportedAttributes();
 
             displayer.getDataSetHandler().lookupDataSet(new DataSetReadyCallback() {
+                @Override
                 public void callback(DataSet dataSet) {
                     show();
                 }
+                @Override
                 public void notFound() {
                     view.dataSetNotFound();
                 }
-
                 @Override
                 public boolean onError(final ClientRuntimeError error) {
                     view.error(error.getMessage());
@@ -189,12 +190,6 @@ public class DisplayerSettingsEditor implements IsWidget {
             }
             if (isSupported(TITLE_VISIBLE)) {
                 view.addBooleanProperty(TITLE_VISIBLE, displayerSettings.isTitleVisible());
-            }
-            if (isSupported(ALLOW_EXPORT_CSV)) {
-                view.addBooleanProperty(ALLOW_EXPORT_CSV, displayerSettings.isCSVExportAllowed());
-            }
-            if (isSupported(ALLOW_EXPORT_EXCEL)) {
-                view.addBooleanProperty(ALLOW_EXPORT_EXCEL, displayerSettings.isExcelExportAllowed());
             }
         }
         if (isSupported(RENDERER)) {
@@ -268,6 +263,9 @@ public class DisplayerSettingsEditor implements IsWidget {
             if (isSupported(XAXIS_TITLE)) {
                 view.addTextProperty(XAXIS_TITLE, displayerSettings.getXAxisTitle());
             }
+            if (isSupported(XAXIS_LABELSANGLE)) {
+                view.addTextProperty(XAXIS_LABELSANGLE, String.valueOf(displayerSettings.getXAxisLabelsAngle()));
+            }
             if (isSupported(YAXIS_SHOWLABELS)) {
                 view.addBooleanProperty(YAXIS_SHOWLABELS, displayerSettings.isXAxisShowLabels());
             }
@@ -303,6 +301,9 @@ public class DisplayerSettingsEditor implements IsWidget {
                 optionList.add(SortOrder.DESCENDING.toString());
                 view.addListProperty(TABLE_SORTORDER, optionList, displayerSettings.getTableDefaultSortOrder().toString());
             }
+            if (isSupported(TABLE_COLUMN_PICKER_ENABLED)) {
+                view.addBooleanProperty(TABLE_COLUMN_PICKER_ENABLED, displayerSettings.isTableColumnPickerEnabled());
+            }
         }
         if (isSupported(METER_GROUP)) {
             view.addCategory(METER_GROUP);
@@ -337,6 +338,19 @@ public class DisplayerSettingsEditor implements IsWidget {
                 view.addBooleanProperty(FILTER_NOTIFICATION_ENABLED, displayerSettings.isFilterNotificationEnabled());
             }
         }
+        if (isSupported(SELECTOR_GROUP)) {
+            view.addCategory(SELECTOR_GROUP);
+
+            if (isSupported(SELECTOR_WIDTH)) {
+                view.addTextProperty(SELECTOR_WIDTH, String.valueOf(displayerSettings.getSelectorWidth()), createLongValidator());
+            }
+            if (isSupported(SELECTOR_MULTIPLE)) {
+                view.addBooleanProperty(SELECTOR_MULTIPLE, displayerSettings.isSelectorMultiple());
+            }
+            if (isSupported(SELECTOR_SHOW_INPUTS)) {
+                view.addBooleanProperty(SELECTOR_SHOW_INPUTS, displayerSettings.isSelectorInputsEnabled());
+            }
+        }
         if (isSupported(REFRESH_GROUP)) {
             view.addCategory(REFRESH_GROUP);
 
@@ -359,7 +373,7 @@ public class DisplayerSettingsEditor implements IsWidget {
                 String expression = cs.getValueExpression();
                 String pattern = cs.getValuePattern();
 
-                view.addTextProperty(fieldSuffix + "name", "\u25fe " + view.getColumnNameI18n() + (i + 1), cs.getColumnName());
+                view.addTextProperty(fieldSuffix + "name", view.getColumnNameI18n() + (i + 1), cs.getColumnName());
 
                 if (expression != null) {
                     view.addTextProperty(fieldSuffix + "expression", "     " + view.getColumnExpressionI18n(), expression);
@@ -372,6 +386,16 @@ public class DisplayerSettingsEditor implements IsWidget {
                     String empty = cs.getEmptyTemplate();
                     view.addTextProperty(fieldSuffix + "empty", "     " + view.getColumnEmptyI18n(), empty);
                 }*/
+            }
+        }
+        if (isSupported(EXPORT_GROUP)) {
+            view.addCategory(EXPORT_GROUP);
+
+            if (isSupported(EXPORT_TO_CSV)) {
+                view.addBooleanProperty(EXPORT_TO_CSV, displayerSettings.isCSVExportAllowed());
+            }
+            if (isSupported(EXPORT_TO_XLS)) {
+                view.addBooleanProperty(EXPORT_TO_XLS, displayerSettings.isExcelExportAllowed());
             }
         }
         view.show();

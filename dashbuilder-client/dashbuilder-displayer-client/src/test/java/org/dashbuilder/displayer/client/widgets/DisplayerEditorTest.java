@@ -19,13 +19,17 @@ import javax.enterprise.event.Event;
 
 import org.dashbuilder.dataset.DataSetLookupConstraints;
 import org.dashbuilder.dataset.client.DataSetClientServices;
+import org.dashbuilder.dataset.group.AggregateFunctionType;
 import org.dashbuilder.dataset.uuid.UUIDGenerator;
 import org.dashbuilder.displayer.DisplayerConstraints;
 import org.dashbuilder.displayer.DisplayerSettings;
+import org.dashbuilder.displayer.DisplayerSettingsBuilder;
+import org.dashbuilder.displayer.DisplayerSettingsFactory;
 import org.dashbuilder.displayer.DisplayerSubType;
 import org.dashbuilder.displayer.DisplayerType;
 import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.DisplayerLocator;
+import org.dashbuilder.displayer.client.events.DataSetLookupChangedEvent;
 import org.dashbuilder.displayer.client.events.DisplayerEditorClosedEvent;
 import org.dashbuilder.displayer.client.events.DisplayerEditorSavedEvent;
 import org.dashbuilder.displayer.client.prototypes.DisplayerPrototypes;
@@ -78,6 +82,9 @@ public class DisplayerEditorTest {
     Displayer displayer;
 
     @Mock
+    DisplayerHtmlEditor displayerHtmlEditor;
+
+    @Mock
     Displayer tableDisplayer;
 
     @Mock
@@ -104,7 +111,7 @@ public class DisplayerEditorTest {
         when(displayerConstraints.getDataSetLookupConstraints()).thenReturn(lookupConstraints);
 
         presenter = new DisplayerEditor(view, clientServices, displayerLocator, displayerPrototypes,
-                typeSelector, lookupEditor, settingsEditor, editorStatus, saveEvent, closeEvent);
+                typeSelector, lookupEditor, settingsEditor, editorStatus, displayerHtmlEditor, saveEvent, closeEvent);
 
     }
 
@@ -121,7 +128,7 @@ public class DisplayerEditorTest {
 
         verify(typeSelector).init(any(DisplayerType.class), any(DisplayerSubType.class));
         verify(lookupEditor).init(lookupConstraints, null);
-        verify(settingsEditor).init(displayerSettings);
+        verify(settingsEditor).init(displayer);
 
         verify(view).showDisplayer(displayer);
     }
@@ -217,5 +224,33 @@ public class DisplayerEditorTest {
 
         verify(tableDisplayer).draw();
         verify(view).showDisplayer(tableDisplayer);
+    }
+
+    @Test
+    public void testDataLookupChanged() {
+        DisplayerSettings settings1 = DisplayerSettingsFactory.newPieChartSettings()
+                .uuid("test1")
+                .dataset("test")
+                .group("employee")
+                .column("employee").format("Employee")
+                .column(AggregateFunctionType.COUNT, "#items").format("#Items")
+                .buildSettings();
+
+        DisplayerSettings settings2 = DisplayerSettingsFactory.newPieChartSettings()
+                .uuid("test2")
+                .dataset("test")
+                .group("department")
+                .column("department").format("Department")
+                .column("amount", AggregateFunctionType.SUM).format("Total amount")
+                .buildSettings();
+
+        when(displayerLocator.lookupDisplayer(any())).thenReturn(displayer);
+        presenter.init(settings1);
+        assertEquals(presenter.getDisplayerSettings().getColumnSettingsList().size(), 2);
+        reset(settingsEditor);
+
+        presenter.onDataSetLookupChanged(new DataSetLookupChangedEvent(settings2.getDataSetLookup()));
+        verify(settingsEditor).init(any());
+        assertEquals(presenter.getDisplayerSettings().getColumnSettingsList().size(), 0);
     }
 }

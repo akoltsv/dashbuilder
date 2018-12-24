@@ -29,28 +29,35 @@ public interface DisplayerListener {
     /**
      * Invoked just before the data lookup operation has been started,
      *
-     * @param displayer The Displayer instance where the interval selection event comes from.
+     * @param displayer The Displayer instance.
      */
     void onDataLookup(Displayer displayer);
 
     /**
+     * Invoked right after the data lookup finishes and the data set is available,
+     *
+     * @param displayer The Displayer instance.
+     */
+    void onDataLoaded(Displayer displayer);
+
+    /**
      * Invoked just after the displayer has been drawn.
      *
-     * @param displayer The Displayer instance where the interval selection event comes from.
+     * @param displayer The Displayer instance.
      */
     void onDraw(Displayer displayer);
 
     /**
      * Invoked just after the displayer has been redrawn.
      *
-     * @param displayer The Displayer instance where the interval selection event comes from.
+     * @param displayer The Displayer instance.
      */
     void onRedraw(Displayer displayer);
 
     /**
      * Invoked just after the displayer has been closed.
      *
-     * @param displayer The Displayer instance where the interval selection event comes from.
+     * @param displayer The Displayer instance.
      */
     void onClose(Displayer displayer);
 
@@ -69,6 +76,15 @@ public interface DisplayerListener {
      * @param filter The filter operation.
      */
     void onFilterEnabled(Displayer displayer, DataSetFilter filter);
+
+    /**
+     * Invoked when an update filter request is executed on an already filtered Displayer instance.
+     *
+     * @param displayer The Displayer instance where the filter request event comes from.
+     * @param oldFilter The old filter operation.
+     * @param newFilter The new filter operation.
+     */
+    void onFilterUpdate(Displayer displayer, DataSetFilter oldFilter, DataSetFilter newFilter);
 
     /**
      * Invoked when a group interval reset request is executed on a given Displayer instance.

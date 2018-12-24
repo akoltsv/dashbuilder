@@ -46,7 +46,7 @@ public interface AppConstants extends Messages {
 
     String menu_dashboards_new();
 
-    String menu_extensions_plugins();
+    String menu_content_manager();
 
     String menu_extensions_apps();
 
@@ -440,6 +440,14 @@ public interface AppConstants extends Messages {
     String gallerytree_table_default_dd_column9();
 
     String gallerytree_table_default_dd_column10();
+
+    String gallerytree_selector();
+
+    String gallerytree_selector_dropdown();
+
+    String gallerytree_selector_labels();
+
+    String gallerytree_selector_slider();
 
     String gallerytree_db();
 
@@ -861,4 +869,9 @@ public interface AppConstants extends Messages {
 
     String salesopps_displayers_all_list_title();
 
+    String content_manager_dashboard();
+
+    String content_manager_dashboards();
+
+    String content_manager_noDashboards();
 }

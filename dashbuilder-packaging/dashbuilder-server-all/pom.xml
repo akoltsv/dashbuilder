@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.dashbuilder</groupId>
     <artifactId>dashbuilder-packaging</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>dashbuilder-server-all</artifactId>
@@ -33,28 +33,33 @@
   <dependencies>
 
     <dependency>
-      <groupId>org.dashbuilder</groupId>
-      <artifactId>dashbuilder-dataset-core</artifactId>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-dataset-core</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.dashbuilder</groupId>
-      <artifactId>dashbuilder-dataset-sql</artifactId>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-dataset-sql</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.dashbuilder</groupId>
-      <artifactId>dashbuilder-dataset-csv</artifactId>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-dataset-csv</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.dashbuilder</groupId>
-      <artifactId>dashbuilder-dataset-elasticsearch</artifactId>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-dataset-elasticsearch</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.dashbuilder</groupId>
       <artifactId>dashbuilder-dataset-cdi</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-navigation-backend</artifactId>
     </dependency>
 
     <dependency>

@@ -29,6 +29,8 @@ public class DisplayerAttributeGroupDef extends DisplayerAttributeDef {
 
     public static final DisplayerAttributeGroupDef FILTER_GROUP = new DisplayerAttributeGroupDef( "filter" );
 
+    public static final DisplayerAttributeGroupDef SELECTOR_GROUP = new DisplayerAttributeGroupDef( "selector" );
+
     public static final DisplayerAttributeGroupDef CHART_GROUP = new DisplayerAttributeGroupDef( "chart" );
 
     public static final DisplayerAttributeGroupDef TABLE_GROUP = new DisplayerAttributeGroupDef( "table" );
@@ -36,6 +38,10 @@ public class DisplayerAttributeGroupDef extends DisplayerAttributeDef {
     public static final DisplayerAttributeGroupDef AXIS_GROUP = new DisplayerAttributeGroupDef( "axis" );
 
     public static final DisplayerAttributeGroupDef METER_GROUP = new DisplayerAttributeGroupDef( "meter" );
+
+    public static final DisplayerAttributeGroupDef HTML_GROUP = new DisplayerAttributeGroupDef( "html" );
+
+    public static final DisplayerAttributeGroupDef EXPORT_GROUP = new DisplayerAttributeGroupDef( "export" );
 
 
     // SUBGROUPS
